@@ -2,10 +2,27 @@
 
 #include "msp430x54xA.h"
 #include "lcd.c"
-void openGate();
-void closeGate();
+// Functions Declarations
+// 1) Gate functions - control step motors
+void openEntranceGate();
+void closeEntranceGate();
+void rotateRightM1(int steps);
+void rotateLeftM1(int steps);
+
+void openExitGate();
+void closeExitGate();
+void rotateRightM2(int steps);
+void rotateLeftM2(int steps);
+
+// Delay
 void delay(long value);
+
+// Photoresist Sensors
+
 int temp = 0;
+// ==========
+// == MAIN ==
+// ==========
 void main(void)
 {
     
@@ -95,31 +112,28 @@ void delay(long value){
 	long ind = 0;
 	for(ind = 0 ; ind < value; ind++ );	
 }
-
-void openGate(){
-	for (int ind = 0; ind < 124 ; ind++){
-    
-  P5OUT |= BIT0 ;
-  delay(20000);
-  P5OUT &= ~BIT0 ;
-  
-  P6OUT |= BIT7 ;
-  delay(20000);
-  P6OUT &= ~BIT7 ;
-  
-  P7OUT |= BIT5 ;
-  delay(20000);
-  P7OUT &= ~BIT5 ;
-  
-  P7OUT |= BIT7 ;
-  delay(200004); 
-  P7OUT &= ~BIT7 ;
-    
-  }
+//Gates Function (rotating step motors)
+void openEntranceGate(){
+	rotateLeftM1(124); // ~90 degrees     
 }
-void closeGate(){
-	for ( int ind = 0; ind < 124 ; ind++){
-      
+void closeEntranceGate(){
+	rotateRightM1(124);
+}
+void rotateRightM1(int steps){
+	// Description
+	/*
+	this function will rotate the step motor N steps to the right
+	the pins of the motor are connected:
+	INT1 -> P7.7
+	INT2 -> P7.5
+	INT3 -> P6.7
+	INT4 -> P5.0
+	
+	Steps to degrees:
+	124 steps ~ 90 degrees
+	
+	*/
+	for ( int ind = 0; ind < steps ; ind++){
 	  P7OUT |= BIT7 ;
 	  delay(); 
 	  P7OUT &= ~BIT7 ;   
@@ -135,11 +149,114 @@ void closeGate(){
 	  P5OUT |= BIT0 ;
 	  delay();
 	  P5OUT &= ~BIT0 ;
-  }
+	}
+}
+void rotateLefttM1(int steps){
+	// Description
+	/*
+	this function will rotate the step motor N steps to the left
+	the pins of the motor are connected:
+	INT1 -> P7.7
+	INT2 -> P7.5
+	INT3 -> P6.7
+	INT4 -> P5.0
+	
+	Steps to degrees:
+	124 steps ~ 90 degrees
+	
+	*/
+	for ( int ind = 0; ind < steps ; ind++){
+	  P5OUT |= BIT0 ;
+	  delay(20000);
+	  P5OUT &= ~BIT0 ;
+	  
+	  P6OUT |= BIT7 ;
+	  delay(20000);
+	  P6OUT &= ~BIT7 ;
+	  
+	  P7OUT |= BIT5 ;
+	  delay(20000);
+	  P7OUT &= ~BIT5 ;
+	  
+	  P7OUT |= BIT7 ;
+	  delay(20000); 
+	  P7OUT &= ~BIT7 ;
+	}
 }
 
-
-// Echo back RXed character, confirm TX buffer is ready first
+void openExitGate(){
+	rotateRightM2(124); // ~90 degrees     
+}
+void closeExitGate(){
+	rotateLeftM2(124);
+}
+void rotateRightM2(int steps){
+	// Description
+	/*
+	this function will rotate the step motor N steps to the right
+	the pins of the motor are connected:
+	INT1 -> P7.7
+	INT2 -> P7.5
+	INT3 -> P6.7
+	INT4 -> P5.0
+	
+	Steps to degrees:
+	124 steps ~ 90 degrees
+	
+	*/
+	for ( int ind = 0; ind < steps ; ind++){
+	  P7OUT |= BIT7 ;
+	  delay(); 
+	  P7OUT &= ~BIT7 ;   
+		  
+	  P7OUT |= BIT5 ;
+	  delay();
+	  P7OUT &= ~BIT5 ;
+	  
+	  P6OUT |= BIT7 ;
+	  delay();
+	  P6OUT &= ~BIT7 ; 
+	  
+	  P5OUT |= BIT0 ;
+	  delay();
+	  P5OUT &= ~BIT0 ;
+	}
+}
+void rotateLefttM2(int steps){
+	// Description
+	/*
+	this function will rotate the step motor N steps to the left
+	the pins of the motor are connected:
+	INT1 -> P7.7
+	INT2 -> P7.5
+	INT3 -> P6.7
+	INT4 -> P5.0
+	
+	Steps to degrees:
+	124 steps ~ 90 degrees
+	
+	*/
+	for ( int ind = 0; ind < steps ; ind++){
+	  P5OUT |= BIT0 ;
+	  delay(20000);
+	  P5OUT &= ~BIT0 ;
+	  
+	  P6OUT |= BIT7 ;
+	  delay(20000);
+	  P6OUT &= ~BIT7 ;
+	  
+	  P7OUT |= BIT5 ;
+	  delay(20000);
+	  P7OUT &= ~BIT5 ;
+	  
+	  P7OUT |= BIT7 ;
+	  delay(20000); 
+	  P7OUT &= ~BIT7 ;
+	}
+}
+// ========
+// Interups
+// ========
 #pragma vector=USCI_A1_VECTOR
 __interrupt void USCI_A1_ISR(void)
 {
