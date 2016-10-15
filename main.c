@@ -105,6 +105,7 @@ void main(void)
   __bis_SR_register(LPM0_bits + GIE);       // Enter LPM0, interrupts enabled
   __no_operation();                         // For debugger
 }
+// Delay
 void delay(long value){
 	// At clk 16MHZ:
 	// value = 2000000 ~ 500ms
@@ -252,6 +253,267 @@ void rotateLefttM2(int steps){
 	  P7OUT |= BIT7 ;
 	  delay(20000); 
 	  P7OUT &= ~BIT7 ;
+	}
+}
+// General
+setPinInput(int port, int pin){
+	int bit = 0;
+	switch(pin){
+		case 0:
+			bit = BIT0 ;
+			break;
+		case 1:
+			bit = BIT1 ;
+			break;
+		case 2:
+			bit = BIT2 ;
+			break;
+		case 3:
+			bit = BIT3 ;
+			break;
+		case 4:
+			bit = BIT4 ;
+			break;
+		case 5:
+			bit = BIT5 ;
+			break;
+		case 6:
+			bit = BIT6 ;
+			break;
+		case 7:
+			bit = BIT7 ;
+			break;
+	}
+	switch(port){
+		case 1:
+			P1DIR &= ~bit ;
+			break;
+		case 2:
+			P2DIR &= ~bit ;
+			break;
+		case 3:
+			P3DIR &= ~bit ;
+			break;
+		case 4:
+			P4DIR &= ~bit ;
+			break;
+		case 5:
+			P5DIR &= ~bit ;
+			break;
+		case 6:
+			P6DIR &= ~bit ;
+			break;
+		case 7:
+			P7DIR &= ~bit ;
+			break;
+		case 8:
+			P8DIR &= ~bit ;
+			break;
+		case 9:
+			P9DIR &= ~bit ;
+			break;
+		case 10:
+			P10DIR &= ~bit ;
+			break;
+		case 11:
+			P11DIR &= ~bit ;
+			break;
+
+	}
+}
+setPinOutput(int port, int pin){
+	int bit = 0;
+	switch(pin){
+		case 0:
+			bit = BIT0 ;
+			break;
+		case 1:
+			bit = BIT1 ;
+			break;
+		case 2:
+			bit = BIT2 ;
+			break;
+		case 3:
+			bit = BIT3 ;
+			break;
+		case 4:
+			bit = BIT4 ;
+			break;
+		case 5:
+			bit = BIT5 ;
+			break;
+		case 6:
+			bit = BIT6 ;
+			break;
+		case 7:
+			bit = BIT7 ;
+			break;
+	}
+	switch(port){
+		case 1:
+			P1DIR |= bit ;
+			break;
+		case 2:
+			P2DIR |= bit ;
+			break;
+		case 3:
+			P3DIR |= bit ;
+			break;
+		case 4:
+			P4DIR |= bit ;
+			break;
+		case 5:
+			P5DIR |= bit ;
+			break;
+		case 6:
+			P6DIR |= bit ;
+			break;
+		case 7:
+			P7DIR |= bit ;
+			break;
+		case 8:
+			P8DIR |= bit ;
+			break;
+		case 9:
+			P9DIR |= bit ;
+			break;
+		case 10:
+			P10DIR |= bit ;
+			break;
+		case 11:
+			P11DIR |= bit ;
+			break;
+
+	}
+}
+setPinHigh(int port, int pin){
+	int bit = 0;
+	switch(pin){
+		case 0:
+			bit = BIT0 ;
+			break;
+		case 1:
+			bit = BIT1 ;
+			break;
+		case 2:
+			bit = BIT2 ;
+			break;
+		case 3:
+			bit = BIT3 ;
+			break;
+		case 4:
+			bit = BIT4 ;
+			break;
+		case 5:
+			bit = BIT5 ;
+			break;
+		case 6:
+			bit = BIT6 ;
+			break;
+		case 7:
+			bit = BIT7 ;
+			break;
+	}
+	switch(port){
+		case 1:
+			P1OUT |= bit ;
+			break;
+		case 2:
+			P2OUT |= bit ;
+			break;
+		case 3:
+			P3OUT |= bit ;
+			break;
+		case 4:
+			P4OUT |= bit ;
+			break;
+		case 5:
+			P5OUT |= bit ;
+			break;
+		case 6:
+			P6OUT |= bit ;
+			break;
+		case 7:
+			P7OUT |= bit ;
+			break;
+		case 8:
+			P8OUT |= bit ;
+			break;
+		case 9:
+			P9OUT |= bit ;
+			break;
+		case 10:
+			P10OUT |= bit ;
+			break;
+		case 11:
+			P11OUT |= bit ;
+			break;
+
+	}
+}
+setPinLow(int port, int pin){
+	int bit = 0;
+	switch(pin){
+		case 0:
+			bit = BIT0 ;
+			break;
+		case 1:
+			bit = BIT1 ;
+			break;
+		case 2:
+			bit = BIT2 ;
+			break;
+		case 3:
+			bit = BIT3 ;
+			break;
+		case 4:
+			bit = BIT4 ;
+			break;
+		case 5:
+			bit = BIT5 ;
+			break;
+		case 6:
+			bit = BIT6 ;
+			break;
+		case 7:
+			bit = BIT7 ;
+			break;
+	}
+	switch(port){
+		case 1:
+			P1OUT &= ~bit ;
+			break;
+		case 2:
+			P2OUT &= ~bit ;
+			break;
+		case 3:
+			P3OUT &= ~bit ;
+			break;
+		case 4:
+			P4OUT &= ~bit ;
+			break;
+		case 5:
+			P5OUT &= ~bit ;
+			break;
+		case 6:
+			P6OUT &= ~bit ;
+			break;
+		case 7:
+			P7OUT &= ~bit ;
+			break;
+		case 8:
+			P8OUT &= ~bit ;
+			break;
+		case 9:
+			P9OUT &= ~bit ;
+			break;
+		case 10:
+			P10OUT &= ~bit ;
+			break;
+		case 11:
+			P11OUT &= ~bit ;
+			break;
+
 	}
 }
 // ========
