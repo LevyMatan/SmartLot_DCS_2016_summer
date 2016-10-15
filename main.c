@@ -17,6 +17,11 @@ void rotateLeftM2(int steps);
 // Delay
 void delay(long value);
 
+// General
+setPinInput(int port, int pin);
+setPinOutput(int port, int pin);
+setPinHigh(int port, int pin);
+setPinLow(int port, int pin);
 // Photoresist Sensors
 
 int temp = 0;
