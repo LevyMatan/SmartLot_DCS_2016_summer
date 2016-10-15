@@ -127,19 +127,19 @@ void rotateRightM1(int steps){
 	*/
 	for ( int ind = 0; ind < steps ; ind++){
 	  P7OUT |= BIT7 ;
-	  delay(); 
+	  delay(20000); 
 	  P7OUT &= ~BIT7 ;   
 		  
 	  P7OUT |= BIT5 ;
-	  delay();
+	  delay(20000);
 	  P7OUT &= ~BIT5 ;
 	  
 	  P6OUT |= BIT7 ;
-	  delay();
+	  delay(20000);
 	  P6OUT &= ~BIT7 ; 
 	  
 	  P5OUT |= BIT0 ;
-	  delay();
+	  delay(20000);
 	  P5OUT &= ~BIT0 ;
 	}
 }
@@ -198,19 +198,19 @@ void rotateRightM2(int steps){
 	*/
 	for ( int ind = 0; ind < steps ; ind++){
 	  P7OUT |= BIT7 ;
-	  delay(); 
+	  delay(20000); 
 	  P7OUT &= ~BIT7 ;   
 		  
 	  P7OUT |= BIT5 ;
-	  delay();
+	  delay(20000);
 	  P7OUT &= ~BIT5 ;
 	  
 	  P6OUT |= BIT7 ;
-	  delay();
+	  delay(20000);
 	  P6OUT &= ~BIT7 ; 
 	  
 	  P5OUT |= BIT0 ;
-	  delay();
+	  delay(20000);
 	  P5OUT &= ~BIT0 ;
 	}
 }
