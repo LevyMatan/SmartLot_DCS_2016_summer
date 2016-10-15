@@ -34,15 +34,12 @@ void main(void)
     /* Check for the version of the board */ 
  if(!assert_board_version())
     while(1);  
-  
-  
+   
   //Initialize clock and peripherals 
   halBoardInit();  
   halBoardStartXT1();	
   halBoardSetSystemClock(SYSCLK_16MHZ);
-
   loadSettings();
-  
   
   //Initialize LCD and backlight   
   halLcdInit();       
@@ -50,7 +47,6 @@ void main(void)
   halLcdSetBackLight(lcdBackLightLevelSettingLOCAL);
   halLcdSetContrast(lcdContrastSettingLOCAL);
   halLcdClearScreen(); 
-
 
   CpuMode = ACTIVE_MODE;
 
@@ -72,7 +68,6 @@ void main(void)
   UCA1MCTL |= UCBRS_5 + UCBRF_0;            // Modulation UCBRSx=5, UCBRFx=0
   UCA1CTL1 &= ~UCSWRST;                     // **Initialize USCI state machine**
   UCA1IE |= UCRXIE;                         // Enable USCI_A1 RX interrupt
-  halLcdClearScreen();
 
   // Step Motor Test
   /*
@@ -84,18 +79,9 @@ void main(void)
   
   
 
-    P5DIR |= BIT0 ;
+
   // Control Led test 
-  while(1){
 
-  P5OUT |= BIT0 ;
- 
-  delay();
-
-  P5OUT &= ~BIT0 ;
- 
-  delay();
-  }
   // photoResist test
   /*
   ADC12MCTL0 = ADC12INCH_7; 		    // P6.7, Vref+
