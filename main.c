@@ -26,10 +26,10 @@ void InitializeUltrasonic();
 void delay(long value);
 
 // 4) General
-setPinInput(int port, int pin);
-setPinOutput(int port, int pin);
-setPinHigh(int port, int pin);
-setPinLow(int port, int pin);
+void setPinInput(int port, int pin);
+void setPinOutput(int port, int pin);
+void setPinHigh(int port, int pin);
+void setPinLow(int port, int pin);
 // Photoresist Sensors
 
 
@@ -290,7 +290,235 @@ void rotateRightM2(int steps){
 	  setPinLow(10,6);
 	}
 }
-void rotateLefttM2(int steps){
+void rotateLeftM2(int steps){
+	// Description
+	/*
+	this function will rotate the step motor N steps to the right
+	the pins of the motor are connected:
+	INT1 -> P10.6
+	INT2 -> P10.4
+	INT3 -> P10.2
+	INT4 -> P10.0
+	
+	Steps to degrees:
+	124 steps ~ 90 degrees
+	
+	*/
+	for ( int ind = 0; ind < steps ; ind++){
+	  setPinHigh(10,6);
+	  delay(20000); 
+	  setPinLow(10,6);   
+		  
+	  setPinHigh(10,4);
+	  delay(20000);
+	  setPinLow(10,4);
+	  
+	  setPinHigh(10,2);
+	  delay(20000);
+	  setPinLow(10,2);
+	  
+	  setPinHigh(10,0);
+	  delay(20000);
+	  setPinLow(10,0);
+	}
+}
+// General
+void setPinInput(int port, int pin){
+	int bit = 0;
+	switch(pin){
+		case 0:
+			bit = BIT0 ;
+			break;
+		case 1:
+			bit = BIT1 ;
+			break;
+		case 2:
+			bit = BIT2 ;
+			break;
+		case 3:
+			bit = BIT3 ;
+			break;
+		case 4:
+			bit = BIT4 ;
+			break;
+		case 5:
+			bit = BIT5 ;
+			break;
+		case 6:
+			bit = BIT6 ;
+			break;
+		case 7:
+			bit = BIT7 ;
+			break;
+	}
+	switch(port){
+		case 1:
+			P1DIR &= ~bit ;
+			break;
+		case 2:
+			P2DIR &= ~bit ;
+			break;
+		case 3:
+			P3DIR &= ~bit ;
+			break;
+		case 4:
+			P4DIR &= ~bit ;
+			break;
+		case 5:
+			P5DIR &= ~bit ;
+			break;
+		case 6:
+			P6DIR &= ~bit ;
+			break;
+		case 7:
+			P7DIR &= ~bit ;
+			break;
+		case 8:
+			P8DIR &= ~bit ;
+			break;
+		case 9:
+			P9DIR &= ~bit ;
+			break;
+		case 10:
+			P10DIR &= ~bit ;
+			break;
+		case 11:
+			P11DIR &= ~bit ;
+			break;
+
+	}
+}
+void setPinOutput(int port, int pin){
+	int bit = 0;
+	switch(pin){
+		case 0:
+			bit = BIT0 ;
+			break;
+		case 1:
+			bit = BIT1 ;
+			break;
+		case 2:
+			bit = BIT2 ;
+			break;
+		case 3:
+			bit = BIT3 ;
+			break;
+		case 4:
+			bit = BIT4 ;
+			break;
+		case 5:
+			bit = BIT5 ;
+			break;
+		case 6:
+			bit = BIT6 ;
+			break;
+		case 7:
+			bit = BIT7 ;
+			break;
+	}
+	switch(port){
+		case 1:
+			P1DIR |= bit ;
+			break;
+		case 2:
+			P2DIR |= bit ;
+			break;
+		case 3:
+			P3DIR |= bit ;
+			break;
+		case 4:
+			P4DIR |= bit ;
+			break;
+		case 5:
+			P5DIR |= bit ;
+			break;
+		case 6:
+			P6DIR |= bit ;
+			break;
+		case 7:
+			P7DIR |= bit ;
+			break;
+		case 8:
+			P8DIR |= bit ;
+			break;
+		case 9:
+			P9DIR |= bit ;
+			break;
+		case 10:
+			P10DIR |= bit ;
+			break;
+		case 11:
+			P11DIR |= bit ;
+			break;
+
+	}
+}
+void setPinHigh(int port, int pin){
+	int bit = 0;
+	switch(pin){
+		case 0:
+			bit = BIT0 ;
+			break;
+		case 1:
+			bit = BIT1 ;
+			break;
+		case 2:
+			bit = BIT2 ;
+			break;
+		case 3:
+			bit = BIT3 ;
+			break;
+		case 4:
+			bit = BIT4 ;
+			break;
+		case 5:
+			bit = BIT5 ;
+			break;
+		case 6:
+			bit = BIT6 ;
+			break;
+		case 7:
+			bit = BIT7 ;
+			break;
+	}
+	switch(port){
+		case 1:
+			P1OUT |= bit ;
+			break;
+		case 2:
+			P2OUT |= bit ;
+			break;
+		case 3:
+			P3OUT |= bit ;
+			break;
+		case 4:
+			P4OUT |= bit ;
+			break;
+		case 5:
+			P5OUT |= bit ;
+			break;
+		case 6:
+			P6OUT |= bit ;
+			break;
+		case 7:
+			P7OUT |= bit ;
+			break;
+		case 8:
+			P8OUT |= bit ;
+			break;
+		case 9:
+			P9OUT |= bit ;
+			break;
+		case 10:
+			P10OUT |= bit ;
+			break;
+		case 11:
+			P11OUT |= bit ;
+			break;
+
+	}
+}
+void setPinLow(int port, int pin){
 	int bit = 0;
 	switch(pin){
 		case 0:
@@ -355,7 +583,6 @@ void rotateLefttM2(int steps){
 
 	}
 }
-//
 void updateParkingStatus(){
 	
 	for (int ind = 0 ; ind < 4 ; ind++ ){
@@ -404,10 +631,10 @@ void __attribute__ ((interrupt(ADC12_VECTOR))) ADC12ISR (void)
   case  8: break;                           // Vector  8:  ADC12IFG1
   case 10: break;                           // Vector 10:  ADC12IFG2
   case 12:                                  // Vector 12:  ADC12IFG3
-    A0results = ADC12MEM0;           		// Move A0 results, IFG is cleared
-    A1results = ADC12MEM1;           		// Move A1 results, IFG is cleared
-    A2results = ADC12MEM2;           		// Move A2 results, IFG is cleared
-    A3results = ADC12MEM3;           		// Move A3 results, IFG is cleared
+    A1result = ADC12MEM0;           		// Move A0 results, IFG is cleared
+    A2result = ADC12MEM1;           		// Move A1 results, IFG is cleared
+    A3result = ADC12MEM2;           		// Move A2 results, IFG is cleared
+    B1result = ADC12MEM3;           		// Move A3 results, IFG is cleared
 											// Increment results index, modulo; Set Breakpoint1 here
 
   case 14: break;                           // Vector 14:  ADC12IFG4
