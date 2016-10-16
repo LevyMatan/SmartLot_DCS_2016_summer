@@ -111,68 +111,68 @@ void openEntranceGate(){
 void closeEntranceGate(){
 	rotateRightM1(124);
 }
-void rotateRightM1(int steps){
+void rotateLeftM1(int steps){
 	// Description
 	/*
 	this function will rotate the step motor N steps to the right
 	the pins of the motor are connected:
-	INT1 -> P7.7
-	INT2 -> P7.5
-	INT3 -> P6.7
-	INT4 -> P5.0
+	INT1 -> P10.7
+	INT2 -> P10.5
+	INT3 -> P10.3
+	INT4 -> P10.1
 	
 	Steps to degrees:
 	124 steps ~ 90 degrees
 	
 	*/
 	for ( int ind = 0; ind < steps ; ind++){
-	  P7OUT |= BIT7 ;
+	  setPinHigh(10,7);
 	  delay(20000); 
-	  P7OUT &= ~BIT7 ;   
+	  setPinLow(10,7);   
 		  
-	  P7OUT |= BIT5 ;
+	  setPinHigh(10,5);
 	  delay(20000);
-	  P7OUT &= ~BIT5 ;
+	  setPinLow(10,5);
 	  
-	  P6OUT |= BIT7 ;
+	  setPinHigh(10,3);
 	  delay(20000);
-	  P6OUT &= ~BIT7 ; 
+	  setPinLow(10,3);
 	  
-	  P5OUT |= BIT0 ;
+	  setPinHigh(10,1);
 	  delay(20000);
-	  P5OUT &= ~BIT0 ;
+	  setPinLow(10,1);
 	}
 }
-void rotateLefttM1(int steps){
+void rotateRightM1(int steps){
 	// Description
 	/*
 	this function will rotate the step motor N steps to the left
 	the pins of the motor are connected:
-	INT1 -> P7.7
-	INT2 -> P7.5
-	INT3 -> P6.7
-	INT4 -> P5.0
+	INT1 -> P10.7
+	INT2 -> P10.5
+	INT3 -> P10.3
+	INT4 -> P10.1
 	
 	Steps to degrees:
 	124 steps ~ 90 degrees
 	
 	*/
 	for ( int ind = 0; ind < steps ; ind++){
-	  P5OUT |= BIT0 ;
-	  delay(20000);
-	  P5OUT &= ~BIT0 ;
-	  
-	  P6OUT |= BIT7 ;
-	  delay(20000);
-	  P6OUT &= ~BIT7 ;
-	  
-	  P7OUT |= BIT5 ;
-	  delay(20000);
-	  P7OUT &= ~BIT5 ;
-	  
-	  P7OUT |= BIT7 ;
+	  setPinHigh(10,1);
 	  delay(20000); 
-	  P7OUT &= ~BIT7 ;
+	  setPinLow(10,1);   
+		  
+	  setPinHigh(10,3);
+	  delay(20000);
+	  setPinLow(10,3);
+	  
+	  setPinHigh(10,5);
+	  delay(20000);
+	  setPinLow(10,5);
+	  
+	  setPinHigh(10,7);
+	  delay(20000);
+	  setPinLow(10,7);
 	}
 }
 
@@ -187,262 +187,34 @@ void rotateRightM2(int steps){
 	/*
 	this function will rotate the step motor N steps to the right
 	the pins of the motor are connected:
-	INT1 -> P7.7
-	INT2 -> P7.5
-	INT3 -> P6.7
-	INT4 -> P5.0
+	INT1 -> P10.6
+	INT2 -> P10.4
+	INT3 -> P10.2
+	INT4 -> P10.0
 	
 	Steps to degrees:
 	124 steps ~ 90 degrees
 	
 	*/
 	for ( int ind = 0; ind < steps ; ind++){
-	  P7OUT |= BIT7 ;
+	  setPinHigh(10,0);
 	  delay(20000); 
-	  P7OUT &= ~BIT7 ;   
+	  setPinLow(10,0);   
 		  
-	  P7OUT |= BIT5 ;
+	  setPinHigh(10,2);
 	  delay(20000);
-	  P7OUT &= ~BIT5 ;
+	  setPinLow(10,2);
 	  
-	  P6OUT |= BIT7 ;
+	  setPinHigh(10,4);
 	  delay(20000);
-	  P6OUT &= ~BIT7 ; 
+	  setPinLow(10,4);
 	  
-	  P5OUT |= BIT0 ;
+	  setPinHigh(10,6);
 	  delay(20000);
-	  P5OUT &= ~BIT0 ;
+	  setPinLow(10,6);
 	}
 }
 void rotateLefttM2(int steps){
-	// Description
-	/*
-	this function will rotate the step motor N steps to the left
-	the pins of the motor are connected:
-	INT1 -> P7.7
-	INT2 -> P7.5
-	INT3 -> P6.7
-	INT4 -> P5.0
-	
-	Steps to degrees:
-	124 steps ~ 90 degrees
-	
-	*/
-	for ( int ind = 0; ind < steps ; ind++){
-	  P5OUT |= BIT0 ;
-	  delay(20000);
-	  P5OUT &= ~BIT0 ;
-	  
-	  P6OUT |= BIT7 ;
-	  delay(20000);
-	  P6OUT &= ~BIT7 ;
-	  
-	  P7OUT |= BIT5 ;
-	  delay(20000);
-	  P7OUT &= ~BIT5 ;
-	  
-	  P7OUT |= BIT7 ;
-	  delay(20000); 
-	  P7OUT &= ~BIT7 ;
-	}
-}
-// General
-setPinInput(int port, int pin){
-	int bit = 0;
-	switch(pin){
-		case 0:
-			bit = BIT0 ;
-			break;
-		case 1:
-			bit = BIT1 ;
-			break;
-		case 2:
-			bit = BIT2 ;
-			break;
-		case 3:
-			bit = BIT3 ;
-			break;
-		case 4:
-			bit = BIT4 ;
-			break;
-		case 5:
-			bit = BIT5 ;
-			break;
-		case 6:
-			bit = BIT6 ;
-			break;
-		case 7:
-			bit = BIT7 ;
-			break;
-	}
-	switch(port){
-		case 1:
-			P1DIR &= ~bit ;
-			break;
-		case 2:
-			P2DIR &= ~bit ;
-			break;
-		case 3:
-			P3DIR &= ~bit ;
-			break;
-		case 4:
-			P4DIR &= ~bit ;
-			break;
-		case 5:
-			P5DIR &= ~bit ;
-			break;
-		case 6:
-			P6DIR &= ~bit ;
-			break;
-		case 7:
-			P7DIR &= ~bit ;
-			break;
-		case 8:
-			P8DIR &= ~bit ;
-			break;
-		case 9:
-			P9DIR &= ~bit ;
-			break;
-		case 10:
-			P10DIR &= ~bit ;
-			break;
-		case 11:
-			P11DIR &= ~bit ;
-			break;
-
-	}
-}
-setPinOutput(int port, int pin){
-	int bit = 0;
-	switch(pin){
-		case 0:
-			bit = BIT0 ;
-			break;
-		case 1:
-			bit = BIT1 ;
-			break;
-		case 2:
-			bit = BIT2 ;
-			break;
-		case 3:
-			bit = BIT3 ;
-			break;
-		case 4:
-			bit = BIT4 ;
-			break;
-		case 5:
-			bit = BIT5 ;
-			break;
-		case 6:
-			bit = BIT6 ;
-			break;
-		case 7:
-			bit = BIT7 ;
-			break;
-	}
-	switch(port){
-		case 1:
-			P1DIR |= bit ;
-			break;
-		case 2:
-			P2DIR |= bit ;
-			break;
-		case 3:
-			P3DIR |= bit ;
-			break;
-		case 4:
-			P4DIR |= bit ;
-			break;
-		case 5:
-			P5DIR |= bit ;
-			break;
-		case 6:
-			P6DIR |= bit ;
-			break;
-		case 7:
-			P7DIR |= bit ;
-			break;
-		case 8:
-			P8DIR |= bit ;
-			break;
-		case 9:
-			P9DIR |= bit ;
-			break;
-		case 10:
-			P10DIR |= bit ;
-			break;
-		case 11:
-			P11DIR |= bit ;
-			break;
-
-	}
-}
-setPinHigh(int port, int pin){
-	int bit = 0;
-	switch(pin){
-		case 0:
-			bit = BIT0 ;
-			break;
-		case 1:
-			bit = BIT1 ;
-			break;
-		case 2:
-			bit = BIT2 ;
-			break;
-		case 3:
-			bit = BIT3 ;
-			break;
-		case 4:
-			bit = BIT4 ;
-			break;
-		case 5:
-			bit = BIT5 ;
-			break;
-		case 6:
-			bit = BIT6 ;
-			break;
-		case 7:
-			bit = BIT7 ;
-			break;
-	}
-	switch(port){
-		case 1:
-			P1OUT |= bit ;
-			break;
-		case 2:
-			P2OUT |= bit ;
-			break;
-		case 3:
-			P3OUT |= bit ;
-			break;
-		case 4:
-			P4OUT |= bit ;
-			break;
-		case 5:
-			P5OUT |= bit ;
-			break;
-		case 6:
-			P6OUT |= bit ;
-			break;
-		case 7:
-			P7OUT |= bit ;
-			break;
-		case 8:
-			P8OUT |= bit ;
-			break;
-		case 9:
-			P9OUT |= bit ;
-			break;
-		case 10:
-			P10OUT |= bit ;
-			break;
-		case 11:
-			P11OUT |= bit ;
-			break;
-
-	}
-}
-setPinLow(int port, int pin){
 	int bit = 0;
 	switch(pin){
 		case 0:
