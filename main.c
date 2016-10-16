@@ -14,10 +14,13 @@ void closeExitGate();
 void rotateRightM2(int steps);
 void rotateLeftM2(int steps);
 
-// Delay
+// 2) Initilizations
+void InitilaizeUART();
+
+// 3) Delay
 void delay(long value);
 
-// General
+// 4) General
 setPinInput(int port, int pin);
 setPinOutput(int port, int pin);
 setPinHigh(int port, int pin);
@@ -55,46 +58,44 @@ void main(void)
 /////////////////////////////////////////////////////////////////////  
 ///////////////////////////////////////////////////////////////////// 
 
-  WDTCTL = WDTPW + WDTHOLD;                 // Stop WDT
-
-  P5SEL |= BIT6+BIT7;                       // P5.6,p5.7 UART option select
-  UCA1CTL1 |= UCSWRST;                      // **Put state machine in reset**
-  UCA1CTL1 |= UCSSEL_2;                     // SMCLK
-  UCA1CTL0 &= UC7BIT;                       // WordSize = 8 Bit
-  UCA1CTL0 &= ~UCSPB;                       // One stop bit
-  UCA1CTL0 &= UCPEN;                        // Parity disabled 
-  UCA1BR0 = 145;                            // 16MHz 115200 (see User's Guide)
-  UCA1BR1 = 0;                              // 16MHz 115200
-  UCA1MCTL |= UCBRS_5 + UCBRF_0;            // Modulation UCBRSx=5, UCBRFx=0
-  UCA1CTL1 &= ~UCSWRST;                     // **Initialize USCI state machine**
-  UCA1IE |= UCRXIE;                         // Enable USCI_A1 RX interrupt
-
-  // Step Motor Test
-  /*
-  P5DIR |= BIT0 ;
-  P6DIR |= BIT7 ;
-  P7DIR |= BIT5 ;
-  P7DIR |= BIT7 ;
-  */
-  
-  
 
 
-  // Control Led test 
 
-  // photoResist test
-  /*
-  ADC12MCTL0 = ADC12INCH_7; 		    // P6.7, Vref+
-  ADC12CTL0 = ADC12ON+ADC12SHT0_8+ADC12MSC; // ADC12 on, sampling time, multiple sample conversion
-  ADC12CTL1 = ADC12SHP+ADC12CONSEQ_2;       // Use sampling timer, set mode
-  ADC12IE = 0xFF;                           // Enable interrupts from a/d ports
-  ADC12CTL0 |= ADC12ENC;                    // Enable conversions
-  ADC12CTL2 |= ADC12RES_0;
-  ADC12CTL2 &= 0xFFF7;
-  ADC12CTL0 |= ADC12SC;                     // Start conversion
-  */
   __bis_SR_register(LPM0_bits + GIE);       // Enter LPM0, interrupts enabled
   __no_operation();                         // For debugger
+}
+// Initializations
+void InitializeUART(){
+	P5SEL |= BIT6+BIT7;                       // P5.6,p5.7 UART option select
+	UCA1CTL1 |= UCSWRST;                      // **Put state machine in reset**
+	UCA1CTL1 |= UCSSEL_2;                     // SMCLK = 16MHz
+	UCA1CTL0 &= ~UC7BIT;                      // WordSize = 8 Bit
+	UCA1CTL0 &= ~UCSPB;                       // One stop bit
+	UCA1CTL0 &= ~UCPEN;                       // Parity disabled 
+	UCA1BR0 = 145;                            // 16MHz 115200 (see User's Guide)
+	UCA1BR1 = 0;                              // 16MHz 115200
+	UCA1MCTL |= UCBRS_5 + UCBRF_0;            // Modulation UCBRSx=5, UCBRFx=0
+	UCA1CTL1 &= ~UCSWRST;                     // **Initialize USCI state machine**
+	UCA1IE |= UCRXIE;                         // Enable USCI_A1 RX interrupt
+	
+}
+void InitializeWD(){
+	WDTCTL = WDT_MDLY_32;                     // WDT 32ms, SMCLK, interval timer 
+    SFRIE1 |= WDTIE;                          // Enable WDT interrupt
+}
+void InitializeADC12(){
+  WDTCTL = WDTPW+WDTHOLD;                   // Stop watchdog timer
+  P6SEL = 0x0F;                             // Enable A/D channel inputs
+  ADC12CTL0 = ADC12ON+ADC12MSC+ADC12SHT0_8; // Turn on ADC12, extend sampling time
+                                            // to avoid overflow of results
+  ADC12CTL1 = ADC12SHP+ADC12CONSEQ_3;       // Use sampling timer, repeated sequence
+  ADC12MCTL0 = ADC12INCH_0;                 // ref+=AVcc, channel = A0
+  ADC12MCTL1 = ADC12INCH_1;                 // ref+=AVcc, channel = A1
+  ADC12MCTL2 = ADC12INCH_2;                 // ref+=AVcc, channel = A2
+  ADC12MCTL3 = ADC12INCH_3+ADC12EOS;        // ref+=AVcc, channel = A3, end seq.
+  ADC12IE = 0x08;                           // Enable ADC12IFG.3
+  ADC12CTL0 |= ADC12ENC;                    // Enable conversions
+  ADC12CTL0 |= ADC12SC;                     // Start convn - software trigger
 }
 // Delay
 void delay(long value){
@@ -279,9 +280,18 @@ void rotateLefttM2(int steps){
 
 	}
 }
+//
+void updateParkingStatus(){
+	
+	for (int ind = 0 ; ind < 4 ; ind++ ){
+		
+	}
+}
 // ========
 // Interups
 // ========
+
+// UART interrupt Service Routine
 #pragma vector=USCI_A1_VECTOR
 __interrupt void USCI_A1_ISR(void)
 {
@@ -298,25 +308,57 @@ __interrupt void USCI_A1_ISR(void)
     break;
   }
 }
-
+// ADC12 Interrupt Service Routine
+#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
 #pragma vector=ADC12_VECTOR
 __interrupt void ADC12ISR (void)
+#elif defined(__GNUC__)
+void __attribute__ ((interrupt(ADC12_VECTOR))) ADC12ISR (void)
+#else
+#error Compiler not supported!
+#endif
 {
-	/*
-  avg=0;
-  if( adcdelay<100)          //sample and display 100 
-    adcdelay++;
-  if(adcdelay==100)
-  {
-    ADC12IE = 0x00; 
-    adcdelay=0;
-  }  
-*/  
+  static unsigned int index = 0;
+
   switch(__even_in_range(ADC12IV,34))
   {
-  case 6:
-    temp = ADC12MEM0;                       // Move results, IFG is cleared
-    break;
-    
-  }
+  case  0: break;                           // Vector  0:  No interrupt
+  case  2: break;                           // Vector  2:  ADC overflow
+  case  4: break;                           // Vector  4:  ADC timing overflow
+  case  6: break;                           // Vector  6:  ADC12IFG0
+  case  8: break;                           // Vector  8:  ADC12IFG1
+  case 10: break;                           // Vector 10:  ADC12IFG2
+  case 12:                                  // Vector 12:  ADC12IFG3
+    A0results = ADC12MEM0;           		// Move A0 results, IFG is cleared
+    A1results = ADC12MEM1;           		// Move A1 results, IFG is cleared
+    A2results = ADC12MEM2;           		// Move A2 results, IFG is cleared
+    A3results = ADC12MEM3;           		// Move A3 results, IFG is cleared
+											// Increment results index, modulo; Set Breakpoint1 here
+
+  case 14: break;                           // Vector 14:  ADC12IFG4
+  case 16: break;                           // Vector 16:  ADC12IFG5
+  case 18: break;                           // Vector 18:  ADC12IFG6
+  case 20: break;                           // Vector 20:  ADC12IFG7
+  case 22: break;                           // Vector 22:  ADC12IFG8
+  case 24: break;                           // Vector 24:  ADC12IFG9
+  case 26: break;                           // Vector 26:  ADC12IFG10
+  case 28: break;                           // Vector 28:  ADC12IFG11
+  case 30: break;                           // Vector 30:  ADC12IFG12
+  case 32: break;                           // Vector 32:  ADC12IFG13
+  case 34: break;                           // Vector 34:  ADC12IFG14
+  default: break; 
+  }  
+}
+
+// Watchdog Timer interrupt service routine
+#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
+#pragma vector=WDT_VECTOR
+__interrupt void WDT_ISR(void)
+#elif defined(__GNUC__)
+void __attribute__ ((interrupt(WDT_VECTOR))) WDT_ISR (void)
+#else
+#error Compiler not supported!
+#endif
+{
+  updateParkingStatus();                            
 }	
