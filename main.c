@@ -16,6 +16,9 @@ void rotateLeftM2(int steps);
 
 // 2) Initilizations
 void InitilaizeUART();
+void InitializeMotorsPins();
+void InitializeADC12();
+void InitializeWD();
 
 // 3) Delay
 void delay(long value);
@@ -53,11 +56,13 @@ void main(void)
 
   CpuMode = ACTIVE_MODE;
 
+  halLcdPrintLine("Welcome to BGU SmartLot!", 0, 1);						// Welcome message to when booting up
  
   
 /////////////////////////////////////////////////////////////////////  
 ///////////////////////////////////////////////////////////////////// 
-
+	InitializeMotorsPins();
+	InitializeADC12();
 
 
 
@@ -85,6 +90,7 @@ void InitializeWD(){
 }
 void InitializeADC12(){
   WDTCTL = WDTPW+WDTHOLD;                   // Stop watchdog timer
+  P6DIR = 0x0F;								// Set P6.0 P6.1 P6.2 P6.3 as input pins
   P6SEL = 0x0F;                             // Enable A/D channel inputs
   ADC12CTL0 = ADC12ON+ADC12MSC+ADC12SHT0_8; // Turn on ADC12, extend sampling time
                                             // to avoid overflow of results
@@ -96,6 +102,21 @@ void InitializeADC12(){
   ADC12IE = 0x08;                           // Enable ADC12IFG.3
   ADC12CTL0 |= ADC12ENC;                    // Enable conversions
   ADC12CTL0 |= ADC12SC;                     // Start convn - software trigger
+}
+void InitializeMotorsPins(){
+	// MOTOR 1: 
+	// INT1 -> P10.7
+	// INT2 -> P10.5
+	// INT3 -> P10.3
+	// INT4 -> P10.1
+	// MOTOR 2: 
+	// INT1 -> P10.6
+	// INT2 -> P10.4
+	// INT3 -> P10.2
+	// INT4 -> P10.0
+	
+	P10SEL = 0x00 ; // All P10 pins are set to general I/O
+	P10DIR = 0xFF ; // All P10 pins are configured as outputs
 }
 // Delay
 void delay(long value){
