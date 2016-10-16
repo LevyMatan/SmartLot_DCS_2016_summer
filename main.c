@@ -19,6 +19,8 @@ void InitilaizeUART();
 void InitializeMotorsPins();
 void InitializeADC12();
 void InitializeWD();
+void InitializeLEDsPins();
+void InitializeUltrasonic();
 
 // 3) Delay
 void delay(long value);
@@ -30,6 +32,13 @@ setPinHigh(int port, int pin);
 setPinLow(int port, int pin);
 // Photoresist Sensors
 
+
+// Variables
+volatile int A1result, A2result, A3result, B1result;
+// A1result <- P6.0
+// A2result <- P6.1
+// A3result <- P6.2
+// B1result <- P6.3
 int temp = 0;
 // ==========
 // == MAIN ==
@@ -117,6 +126,51 @@ void InitializeMotorsPins(){
 	
 	P10SEL = 0x00 ; // All P10 pins are set to general I/O
 	P10DIR = 0xFF ; // All P10 pins are configured as outputs
+}
+void InitializeLEDsPins(){
+	
+	// A1 RED
+	P8SEL &= ~BIT6;
+	setPinOutput(8,6);
+	setPinLow(8,6);	
+	// A2 RED
+	P7SEL &= ~BIT3;
+	setPinOutput(7,3);
+	setPinLow(7,3);
+	// A3 RED
+	P5SEL &= ~BIT4;
+	setPinOutput(5,4);
+	setPinLow(5,4);
+	// B1 RED
+	P4SEL &= ~BIT6;
+	setPinOutput(4,6);
+	setPinLow(4,6);
+	// A1 GREEN
+	P8SEL &= ~BIT5;
+	setPinOutput(8,5);
+	setPinLow(8,5);
+	// A2 GREEN
+	P5SEL &= ~BIT5;
+	setPinOutput(5,5);
+	setPinLow(5,5);
+	// A3 GREEN
+	P4SEL &= ~BIT7;
+	setPinOutput(4,7);
+	setPinLow(4,7);
+	// B1 GREEN
+	P4SEL &= ~BIT5;
+	setPinOutput(4,5);
+	setPinLow(4,5);
+
+}
+void InitializeUltrasonic(){
+	
+  P1DIR |= 0x01;                            // Set P1.0 to output direction
+  P1REN |= 0x10;                            // Enable P1.4 internal resistance
+  P1OUT |= 0x10;                            // Set P1.4 as pull-Up resistance
+  P1IE |= 0x10;                             // P1.4 interrupt enabled
+  P1IES |= 0x10;                            // P1.4 Hi/Lo edge
+  P1IFG &= ~0x10;                           // P1.4 IFG cleared
 }
 // Delay
 void delay(long value){
@@ -370,7 +424,6 @@ void __attribute__ ((interrupt(ADC12_VECTOR))) ADC12ISR (void)
   default: break; 
   }  
 }
-
 // Watchdog Timer interrupt service routine
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
 #pragma vector=WDT_VECTOR
@@ -381,5 +434,18 @@ void __attribute__ ((interrupt(WDT_VECTOR))) WDT_ISR (void)
 #error Compiler not supported!
 #endif
 {
-  updateParkingStatus();                            
+  //updateParkingStatus();                            
 }	
+// Port 1 interrupt service routine
+#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
+#pragma vector=PORT1_VECTOR
+__interrupt void Port_1(void)
+#elif defined(__GNUC__)
+void __attribute__ ((interrupt(PORT1_VECTOR))) Port_1 (void)
+#else
+#error Compiler not supported!
+#endif
+{
+  P1OUT ^= 0x01;                            // P1.0 = toggle
+  P1IFG &= ~0x010;                          // P1.4 IFG cleared
+}
