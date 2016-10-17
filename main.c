@@ -373,26 +373,40 @@ void rotateLeftM2(int steps){
 
 // LEDs
 void updateLEDs(){
-	if(A1)
+	if(A1){
 		setPinHigh(8,6);
-	else
+		setPinLow(8,5);
+	}		
+	else{
 		setPinHigh(8,5);
-	
-	if(A2)
+		setPinLow(8,6);		
+	}
+	if(A2){
 		setPinHigh(7,3);
-	else
+		setPinLow(5,5);
+	}		
+	else{
 		setPinHigh(5,5);
-	
-	if(A3)
+		setPinLow(7,3);		
+	}
+	if(A4){
 		setPinHigh(5,4);
-	else
+		setPinLow(4,7);
+	}		
+	else{
 		setPinHigh(4,7);
-	
-	if(B1)
+		setPinLow(5,4);		
+	}
+	if(B1){
 		setPinHigh(4,6);
-	else
-		setPinHigh(4,5);	
+		setPinLow(4,5);
+	}		
+	else{
+		setPinHigh(4,5);
+		setPinLow(4,6);		
+	}	
 }
+
 // Photo resist
 void checkParkingThreshold(){
 	if(A1result < thr)
@@ -762,6 +776,7 @@ void __attribute__ ((interrupt(WDT_VECTOR))) WDT_ISR (void)
   P1DIR ^= BIT0 ;
   InitializeADC12();				// photoresist check
   checkParkingThreshold();
+  updateLEDs();
   // Range check
   InitializeTimerA();
   InitializeTimerB();
