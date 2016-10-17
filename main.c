@@ -34,6 +34,7 @@ void setPinLow(int port, int pin);
 
 
 // Variables
+// =========
 volatile int A1result, A2result, A3result, B1result;
 // A1result <- P6.0
 // A2result <- P6.1
@@ -71,9 +72,10 @@ void main(void)
 /////////////////////////////////////////////////////////////////////  
 ///////////////////////////////////////////////////////////////////// 
 	InitializeMotorsPins();
-	InitializeADC12();
-
-
+	//InitializeADC12();
+// test timers
+InitializeTimerA();
+InitializeTimerB();
 
   __bis_SR_register(LPM0_bits + GIE);       // Enter LPM0, interrupts enabled
   __no_operation();                         // For debugger
@@ -172,7 +174,26 @@ void InitializeUltrasonic(){
   P1IES |= 0x10;                            // P1.4 Hi/Lo edge
   P1IFG &= ~0x10;                           // P1.4 IFG cleared
 }
-// Delay
+void InitializeTimerA(){
+  WDTCTL = WDTPW + WDTHOLD;                 // Stop WDT
+  P5DIR |= 0x01;                            // P1.0 output
+  TA1CCTL0 = CCIE;                          // CCR0 interrupt enabled
+  TA1CCR0 = 50000;
+  TA1CTL = TASSEL_2 + MC_1 + TACLR + ID_8;  // SMCLK devided by 8, upmode, clear TAR
+}
+void InitializeTimerB(){
+
+  P4DIR = 0x00;                             // Set P4.0 input dir
+  P4SEL = 0x01;                             // Set P4.0 to TB0
+  TBCCTL0 |= CM_3 + SCS + CCIS_1 + CAP + CCIE; 
+  TBCTL |= CNTL_0 + TBSSEL_2 + MC_2 + ID_8;		// 16-bit length, SMCLK(16MHz), Devider-8, continius-up counting mode,
+  
+  _BIS_SR(GIE);   // interrupt
+   
+
+}
+
+  // Delay
 void delay(long value){
 	// At clk 16MHZ:
 	// value = 2000000 ~ 500ms
@@ -589,6 +610,7 @@ void updateParkingStatus(){
 		
 	}
 }
+
 // ========
 // Interups
 // ========
@@ -675,4 +697,23 @@ void __attribute__ ((interrupt(PORT1_VECTOR))) Port_1 (void)
 {
   P1OUT ^= 0x01;                            // P1.0 = toggle
   P1IFG &= ~0x010;                          // P1.4 IFG cleared
+}
+// Timer A0 interrupt service routine
+#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
+#pragma vector=TIMER1_A0_VECTOR
+__interrupt void TIMER1_A0_ISR(void)
+#elif defined(__GNUC__)
+void __attribute__ ((interrupt(TIMER1_A0_VECTOR))) TIMER1_A0_ISR (void)
+#else
+#error Compiler not supported!
+#endif
+{
+  P5OUT ^= 0x01;                            // Toggle P5.0
+}
+//TimerB capture configuration
+#pragma vector=TIMERB0_VECTOR
+__interrupt void TimerB0(void)
+{
+  temp = TBCCR0;
+  TBCCTL0 &= ~CCIFG;
 }
