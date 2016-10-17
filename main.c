@@ -37,6 +37,7 @@ void setPinLow(int port, int pin);
 
 // Variables
 // =========
+// ADC12 results ( Photoresist sensors )
 volatile int A1result, A2result, A3result, B1result;
 // A1result <- P6.0
 // A2result <- P6.1
@@ -105,25 +106,37 @@ void InitializeWD(){
 }
 void InitializeADC12(){
   //WDTCTL = WDTPW+WDTHOLD;                   // Stop watchdog timer
-  setPinInput(6,7);							// Set P6.7 P7.4 P7.5 P7.6 as input pins
-  setPinInput(7,4);
-  setPinInput(7,5);
-  setPinInput(7,6);
+  //setPinInput(6,7);							// Set P6.7 P7.4 P7.5 P7.6 as input pins
+  //setPinInput(7,4);
+  //setPinInput(7,5);
+  //setPinInput(7,6);
   								
-  P6SEL |= BIT7;                             // Enable A/D channel inputs
-  P7SEL |= BIT4; 
-  P7SEL |= BIT5;
-  P7SEL |= BIT6;
-  
+  //P6SEL |= BIT7;                             // Enable A/D channel inputs
+  //P7SEL |= BIT4; 
+  //P7SEL |= BIT5;
+  //P7SEL |= BIT6;
+  /*   
+  ADC12MCTL0 = ADC12INCH_7; 		    	// P6.7, Vref+
+  ADC12CTL0 = ADC12ON+ADC12SHT0_8+ADC12MSC; // ADC12 on, sampling time, multiple sample conversion
+  ADC12CTL1 = ADC12SHP+ADC12CONSEQ_2;       // Use sampling timer, set mode
+  ADC12IE = 0xFF;                           // Enable interrupts from a/d ports
+  ADC12CTL0 |= ADC12ENC;                    // Enable conversions
+  ADC12CTL2 |= ADC12RES_0;
+  ADC12CTL2 &= 0xFFF7;
+  ADC12CTL0 |= ADC12SC;                     // Start conversion
+  */
   ADC12CTL0 = ADC12ON+ADC12MSC+ADC12SHT0_8;  // Turn on ADC12, set sampling time
-  ADC12CTL1 = ADC12SHP+ADC12CONSEQ_1;        // Use sampling timer, single sequence
+  ADC12CTL1 = ADC12SHP+ADC12CONSEQ_1 + ADC12SSEL_3;        // Use sampling timer, single sequence
+  ADC12CTL2 |= ADC12RES_0;					 // 8 bit
+  ADC12CTL2 &= 0xFFF7;
   ADC12MCTL0 = ADC12INCH_7;                  // ref+=AVcc, channel = A0
   ADC12MCTL1 = ADC12INCH_12;                 // ref+=AVcc, channel = A1
   ADC12MCTL2 = ADC12INCH_13;                 // ref+=AVcc, channel = A2
   ADC12MCTL3 = ADC12INCH_14+ADC12EOS;        // ref+=AVcc, channel = A3, end seq.
-  ADC12IE = ADC12IE3 ;                           // Enable ADC12IFG.3
+  ADC12IE = ADC12IE3 ;                       // Enable ADC12IFG.3
   ADC12CTL0 |= ADC12ENC;                     // Enable conversions
-  ADC12CTL0 |= ADC12SC; 		     // start convertion
+  ADC12CTL0 |= ADC12SC; 		     		 // start convertion
+ 
 }
 void InitializeMotorsPins(){
 	// MOTOR 1: 
@@ -661,7 +674,10 @@ void __attribute__ ((interrupt(ADC12_VECTOR))) ADC12ISR (void)
   case  0: break;                           // Vector  0:  No interrupt
   case  2: break;                           // Vector  2:  ADC overflow
   case  4: break;                           // Vector  4:  ADC timing overflow
-  case  6: break;                           // Vector  6:  ADC12IFG0
+  case  6: 
+	temp1 =  ADC12MEM0;
+        index++;
+  break;                           // Vector  6:  ADC12IFG0
   case  8: break;                           // Vector  8:  ADC12IFG1
   case 10: break;                           // Vector 10:  ADC12IFG2
   case 12:                                  // Vector 12:  ADC12IFG3
@@ -670,7 +686,7 @@ void __attribute__ ((interrupt(ADC12_VECTOR))) ADC12ISR (void)
     A2result = ADC12MEM1;           		// Move A1 results, IFG is cleared
     A3result = ADC12MEM2;           		// Move A2 results, IFG is cleared
     B1result = ADC12MEM3;           		// Move A3 results, IFG is cleared
-    index ++;	
+    4index ++;	
     break;                           
 
   case 14: break;                           // Vector 14:  ADC12IFG4
