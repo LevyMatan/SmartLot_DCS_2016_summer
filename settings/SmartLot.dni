@@ -61,7 +61,7 @@ Symbiont=0
 Exclusions=
 [Breakpoints]
 Bp0=_ "STD_CODE" "{$PROJ_DIR$\main.c}.71.3" 1 0 0 0 "" 0 ""
-Bp1=_ "STD_CODE" "{$PROJ_DIR$\main.c}.75.3" 1 0 0 0 "" 0 ""
+Bp1=_ "STD_CODE" "{$PROJ_DIR$\main.c}.75.1" 1 0 0 0 "" 0 ""
 Count=2
 [FET]
 Clock mode=14

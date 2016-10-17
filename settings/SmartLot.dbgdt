@@ -37,7 +37,7 @@
       <WATCH_1>
         <expressions>
           <item>temp</item>
-          <item></item>
+          <item/>
         </expressions>
         <col-names>
           <item>Expression</item>
