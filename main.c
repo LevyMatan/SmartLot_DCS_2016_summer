@@ -45,7 +45,8 @@ volatile int A1result, A2result, A3result, B1result;
 // A3result <- P6.2
 // B1result <- P6.3
 int A1 = 0; A2 = 0; A3 = 0; B1 = 0; // 0 = free parking space, 1 = Occupied
-long temp1 = 0, temp2 = 0, ind = 1 ;
+long range = 0;
+int pulse = 1;
 // ==========
 // == MAIN ==
 // ==========
@@ -228,6 +229,7 @@ void delay(long value){
 	long ind = 0;
 	for(ind = 0 ; ind < value; ind++ );	
 }
+
 //Gates Function (rotating step motors)
 void openEntranceGate(){
 	rotateLeftM1(124); // ~90 degrees     
@@ -371,6 +373,9 @@ void rotateLeftM2(int steps){
 	}
 }
 
+void exitGateFunc(){
+	range
+}
 // LEDs
 void updateLEDs(){
 	if(A1){
@@ -813,16 +818,15 @@ void __attribute__ ((interrupt(TIMER1_A0_VECTOR))) TIMER1_A0_ISR (void)
 #pragma vector=TIMERB0_VECTOR
 __interrupt void TimerB0(void)
 {
-  if(ind == 1){
-    temp1 = TBCCR0;
+  if(ind){
+    //range = TBCCR0;
     TBCCTL0 |= CM_2 + SCS + CCIS_1 + CAP + CCIE; 
     TBCTL |= CNTL_0 + TBSSEL_2 + MC_2 + ID_0 + TBCLR;		// 16-bit length, SMCLK(16MHz), Devider-8, continius-up counting mode,
     ind =2;
     TBCCTL0 &= ~CCIFG;
   }else{
-    temp2 = TBCCR0;
-    //temp2 = temp2 / 16;
-    //temp2 = temp2 / 58;
+    range = TBCCR0;
+
     if (temp2 < 5568)
        P1OUT |= BIT1 ;
     else 
