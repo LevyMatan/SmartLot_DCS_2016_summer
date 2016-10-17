@@ -32,8 +32,9 @@ void setPinInput(int port, int pin);
 void setPinOutput(int port, int pin);
 void setPinHigh(int port, int pin);
 void setPinLow(int port, int pin);
-// Photoresist Sensors
 
+// 5) Photoresist Sensors
+void checkParkingThreshold();
 
 // Variables
 // =========
@@ -43,6 +44,7 @@ volatile int A1result, A2result, A3result, B1result;
 // A2result <- P6.1
 // A3result <- P6.2
 // B1result <- P6.3
+int A1 = 0; A2 = 0; A3 = 0; B1 = 0; // 0 = free parking space, 1 = Occupied
 long temp1 = 0, temp2 = 0, ind = 1 ;
 // ==========
 // == MAIN ==
@@ -367,6 +369,48 @@ void rotateLeftM2(int steps){
 	  delay(20000);
 	  setPinLow(10,0);
 	}
+}
+
+// LEDs
+void updateLEDs(){
+	if(A1)
+		setPinHigh(8,6);
+	else
+		setPinHigh(8,5);
+	
+	if(A2)
+		setPinHigh(7,3);
+	else
+		setPinHigh(5,5);
+	
+	if(A3)
+		setPinHigh(5,4);
+	else
+		setPinHigh(4,7);
+	
+	if(B1)
+		setPinHigh(4,6);
+	else
+		setPinHigh(4,5);	
+}
+// Photo resist
+void checkParkingThreshold(){
+	if(A1result < thr)
+		A1 = 1 ;
+	else 
+		A1 = 0;
+	if(A2result < thr)
+		A2 = 1 ;
+	else 
+		A2 = 0;
+	if(A3result < thr)
+		A3 = 1 ;
+	else 
+		A3 = 0;
+	if(B1result < thr)
+		B1 = 1 ;
+	else 
+		B1 = 0;
 }
 // General
 void setPinInput(int port, int pin){
@@ -716,9 +760,12 @@ void __attribute__ ((interrupt(WDT_VECTOR))) WDT_ISR (void)
 #endif
 {
   P1DIR ^= BIT0 ;
-  InitializeADC12();
-  //InitializeTimerA();
-  //InitializeTimerB();
+  InitializeADC12();				// photoresist check
+  checkParkingThreshold();
+  // Range check
+  InitializeTimerA();
+  InitializeTimerB();
+  
 }	
 // Port 1 interrupt service routine
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
