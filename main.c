@@ -21,6 +21,8 @@ void InitializeADC12();
 void InitializeWD();
 void InitializeLEDsPins();
 void InitializeUltrasonic();
+void InitializeTimerA();
+void InitializeTimerB();
 
 // 3) Delay
 void delay(long value);
@@ -40,7 +42,7 @@ volatile int A1result, A2result, A3result, B1result;
 // A2result <- P6.1
 // A3result <- P6.2
 // B1result <- P6.3
-int temp = 0;
+long temp1 = 0, temp2 = 0, ind = 1 ;
 // ==========
 // == MAIN ==
 // ==========
@@ -66,16 +68,18 @@ void main(void)
 
   CpuMode = ACTIVE_MODE;
 
-  halLcdPrintLine("Welcome to BGU SmartLot!", 0, 1);						// Welcome message to when booting up
+  halLcdPrintLine("Welcome to BGU SmartLot", 0, 1);						// Welcome message to when booting up
  
   
 /////////////////////////////////////////////////////////////////////  
 ///////////////////////////////////////////////////////////////////// 
 	InitializeMotorsPins();
 	//InitializeADC12();
-// test timers
-InitializeTimerA();
-InitializeTimerB();
+        P1DIR |= BIT0;
+        P1DIR |= BIT1;
+        P1OUT = BIT0;
+        InitializeWD();
+       
 
   __bis_SR_register(LPM0_bits + GIE);       // Enter LPM0, interrupts enabled
   __no_operation();                         // For debugger
@@ -96,23 +100,30 @@ void InitializeUART(){
 	
 }
 void InitializeWD(){
-	WDTCTL = WDT_MDLY_32;                     // WDT 32ms, SMCLK, interval timer 
+    WDTCTL = WDTPW + WDTSSEL_1 + WDTTMSEL + WDTIS_5;                     // WDT 32ms, SMCLK, interval timer 
     SFRIE1 |= WDTIE;                          // Enable WDT interrupt
 }
 void InitializeADC12(){
-  WDTCTL = WDTPW+WDTHOLD;                   // Stop watchdog timer
-  P6DIR = 0x0F;								// Set P6.0 P6.1 P6.2 P6.3 as input pins
-  P6SEL = 0x0F;                             // Enable A/D channel inputs
-  ADC12CTL0 = ADC12ON+ADC12MSC+ADC12SHT0_8; // Turn on ADC12, extend sampling time
-                                            // to avoid overflow of results
-  ADC12CTL1 = ADC12SHP+ADC12CONSEQ_3;       // Use sampling timer, repeated sequence
-  ADC12MCTL0 = ADC12INCH_0;                 // ref+=AVcc, channel = A0
-  ADC12MCTL1 = ADC12INCH_1;                 // ref+=AVcc, channel = A1
-  ADC12MCTL2 = ADC12INCH_2;                 // ref+=AVcc, channel = A2
-  ADC12MCTL3 = ADC12INCH_3+ADC12EOS;        // ref+=AVcc, channel = A3, end seq.
-  ADC12IE = 0x08;                           // Enable ADC12IFG.3
-  ADC12CTL0 |= ADC12ENC;                    // Enable conversions
-  ADC12CTL0 |= ADC12SC;                     // Start convn - software trigger
+  //WDTCTL = WDTPW+WDTHOLD;                   // Stop watchdog timer
+  setPinInput(6,7);							// Set P6.7 P7.4 P7.5 P7.6 as input pins
+  setPinInput(7,4);
+  setPinInput(7,5);
+  setPinInput(7,6);
+  								
+  P6SEL |= BIT7;                             // Enable A/D channel inputs
+  P7SEL |= BIT4; 
+  P7SEL |= BIT5;
+  P7SEL |= BIT6;
+  
+  ADC12CTL0 = ADC12ON+ADC12MSC+ADC12SHT0_8;  // Turn on ADC12, set sampling time
+  ADC12CTL1 = ADC12SHP+ADC12CONSEQ_1;        // Use sampling timer, single sequence
+  ADC12MCTL0 = ADC12INCH_7;                  // ref+=AVcc, channel = A0
+  ADC12MCTL1 = ADC12INCH_12;                 // ref+=AVcc, channel = A1
+  ADC12MCTL2 = ADC12INCH_13;                 // ref+=AVcc, channel = A2
+  ADC12MCTL3 = ADC12INCH_14+ADC12EOS;        // ref+=AVcc, channel = A3, end seq.
+  ADC12IE = ADC12IE3 ;                           // Enable ADC12IFG.3
+  ADC12CTL0 |= ADC12ENC;                     // Enable conversions
+  ADC12CTL0 |= ADC12SC; 		     // start convertion
 }
 void InitializeMotorsPins(){
 	// MOTOR 1: 
@@ -175,18 +186,19 @@ void InitializeUltrasonic(){
   P1IFG &= ~0x10;                           // P1.4 IFG cleared
 }
 void InitializeTimerA(){
-  WDTCTL = WDTPW + WDTHOLD;                 // Stop WDT
-  P5DIR |= 0x01;                            // P1.0 output
+  ind = 1 ;
+  P5DIR |= 0x01;                            // P5.0 output
+  P5OUT |= 0x01;
   TA1CCTL0 = CCIE;                          // CCR0 interrupt enabled
-  TA1CCR0 = 50000;
-  TA1CTL = TASSEL_2 + MC_1 + TACLR + ID_8;  // SMCLK devided by 8, upmode, clear TAR
+  TA1CCR0 = 1600;
+  TA1CTL = TASSEL_2 + MC_1 + TACLR + ID_0;  // SMCLK devided by 8, upmode, clear TAR
 }
 void InitializeTimerB(){
 
   P4DIR = 0x00;                             // Set P4.0 input dir
   P4SEL = 0x01;                             // Set P4.0 to TB0
-  TBCCTL0 |= CM_3 + SCS + CCIS_1 + CAP + CCIE; 
-  TBCTL |= CNTL_0 + TBSSEL_2 + MC_2 + ID_8;		// 16-bit length, SMCLK(16MHz), Devider-8, continius-up counting mode,
+  TBCCTL0 |= CM_1 + SCS + CCIS_1 + CAP + CCIE; 
+  TBCTL |= CNTL_0 + TBSSEL_2 + MC_2 + ID_0;		// 16-bit length, SMCLK(16MHz), Devider-8, continius-up counting mode,
   
   _BIS_SR(GIE);   // interrupt
    
@@ -653,11 +665,13 @@ void __attribute__ ((interrupt(ADC12_VECTOR))) ADC12ISR (void)
   case  8: break;                           // Vector  8:  ADC12IFG1
   case 10: break;                           // Vector 10:  ADC12IFG2
   case 12:                                  // Vector 12:  ADC12IFG3
+
     A1result = ADC12MEM0;           		// Move A0 results, IFG is cleared
     A2result = ADC12MEM1;           		// Move A1 results, IFG is cleared
     A3result = ADC12MEM2;           		// Move A2 results, IFG is cleared
     B1result = ADC12MEM3;           		// Move A3 results, IFG is cleared
-											// Increment results index, modulo; Set Breakpoint1 here
+    index ++;	
+    break;                           
 
   case 14: break;                           // Vector 14:  ADC12IFG4
   case 16: break;                           // Vector 16:  ADC12IFG5
@@ -669,7 +683,9 @@ void __attribute__ ((interrupt(ADC12_VECTOR))) ADC12ISR (void)
   case 28: break;                           // Vector 28:  ADC12IFG11
   case 30: break;                           // Vector 30:  ADC12IFG12
   case 32: break;                           // Vector 32:  ADC12IFG13
-  case 34: break;                           // Vector 34:  ADC12IFG14
+  case 34: break;			    // Vector 34:  ADC12IFG14
+									 
+	                           
   default: break; 
   }  
 }
@@ -683,7 +699,10 @@ void __attribute__ ((interrupt(WDT_VECTOR))) WDT_ISR (void)
 #error Compiler not supported!
 #endif
 {
-  //updateParkingStatus();                            
+  P1DIR ^= BIT0 ;
+  InitializeADC12();
+  //InitializeTimerA();
+  //InitializeTimerB();
 }	
 // Port 1 interrupt service routine
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
@@ -709,11 +728,29 @@ void __attribute__ ((interrupt(TIMER1_A0_VECTOR))) TIMER1_A0_ISR (void)
 #endif
 {
   P5OUT ^= 0x01;                            // Toggle P5.0
+  TA1CTL = TASSEL_2 + MC_0 + TACLR + ID_0;
+  TA1CCTL0 &= ~CCIE;
 }
 //TimerB capture configuration
 #pragma vector=TIMERB0_VECTOR
 __interrupt void TimerB0(void)
 {
-  temp = TBCCR0;
-  TBCCTL0 &= ~CCIFG;
+  if(ind == 1){
+    temp1 = TBCCR0;
+    TBCCTL0 |= CM_2 + SCS + CCIS_1 + CAP + CCIE; 
+    TBCTL |= CNTL_0 + TBSSEL_2 + MC_2 + ID_0 + TBCLR;		// 16-bit length, SMCLK(16MHz), Devider-8, continius-up counting mode,
+    ind =2;
+    TBCCTL0 &= ~CCIFG;
+  }else{
+    temp2 = TBCCR0;
+    //temp2 = temp2 / 16;
+    //temp2 = temp2 / 58;
+    if (temp2 < 5568)
+       P1OUT |= BIT1 ;
+    else 
+      P1OUT &= ~BIT1;
+    TBCCTL0 &= ~CCIFG;
+  }
+    
+  
 }
