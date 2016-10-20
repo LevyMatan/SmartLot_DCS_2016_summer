@@ -44,9 +44,13 @@ volatile int A1result, A2result, A3result, B1result;
 // A2result <- P6.1
 // A3result <- P6.2
 // B1result <- P6.3
-int A1 = 0; A2 = 0; A3 = 0; B1 = 0; // 0 = free parking space, 1 = Occupied
-long range = 0;
-int pulse = 1;
+int A1 = 0, A2 = 0, A3 = 0, B1 = 0; // 0 = free parking space, 1 = Occupied
+int thr = 300 ; // threshold for photoresist sensors
+long range = 0; // range of target from sensor
+int pulse = 1;	// flag for pulse
+int ind;		// stuiped index
+int rangeStat = 0; // 0 - no close target, 1 - close target
+int gateStat = 0; // 0 - gate is close, 1 - gate is open
 // ==========
 // == MAIN ==
 // ==========
@@ -374,7 +378,26 @@ void rotateLeftM2(int steps){
 }
 
 void exitGateFunc(){
-	range
+	if ( rangeStat && ~gateStat ){ // near target and gate is closed
+		openExitGate();
+		delay(200000);
+		return ;
+	}
+		if ( rangeStat && gateStat ){ // near target and gate is open
+		delay(200000);
+		return ;
+	}
+		if ( ~rangeStat && ~gateStat ){ // no near target and gate is closed
+		delay(200000);
+		return ;
+	}
+		if ( ~rangeStat && gateStat ){ // no near target and gate is open
+		closeExitGate();
+		delay(200000);
+		return ;
+	}
+		
+	
 }
 // LEDs
 void updateLEDs(){
@@ -394,7 +417,7 @@ void updateLEDs(){
 		setPinHigh(5,5);
 		setPinLow(7,3);		
 	}
-	if(A4){
+	if(A3){
 		setPinHigh(5,4);
 		setPinLow(4,7);
 	}		
@@ -412,6 +435,11 @@ void updateLEDs(){
 	}	
 }
 
+// UltraSonic
+void getRange(){
+	InitializeTimerA();
+    InitializeTimerB();
+}
 // Photo resist
 void checkParkingThreshold(){
 	if(A1result < thr)
@@ -692,12 +720,7 @@ void setPinLow(int port, int pin){
 
 	}
 }
-void updateParkingStatus(){
-	
-	for (int ind = 0 ; ind < 4 ; ind++ ){
-		
-	}
-}
+
 
 // ========
 // Interups
@@ -737,10 +760,7 @@ void __attribute__ ((interrupt(ADC12_VECTOR))) ADC12ISR (void)
   case  0: break;                           // Vector  0:  No interrupt
   case  2: break;                           // Vector  2:  ADC overflow
   case  4: break;                           // Vector  4:  ADC timing overflow
-  case  6: 
-	temp1 =  ADC12MEM0;
-        index++;
-  break;                           // Vector  6:  ADC12IFG0
+  case  6: break;                           // Vector  6:  ADC12IFG0                          
   case  8: break;                           // Vector  8:  ADC12IFG1
   case 10: break;                           // Vector 10:  ADC12IFG2
   case 12:                                  // Vector 12:  ADC12IFG3
@@ -749,7 +769,7 @@ void __attribute__ ((interrupt(ADC12_VECTOR))) ADC12ISR (void)
     A2result = ADC12MEM1;           		// Move A1 results, IFG is cleared
     A3result = ADC12MEM2;           		// Move A2 results, IFG is cleared
     B1result = ADC12MEM3;           		// Move A3 results, IFG is cleared
-    4index ++;	
+    index ++ ;	
     break;                           
 
   case 14: break;                           // Vector 14:  ADC12IFG4
@@ -778,13 +798,14 @@ void __attribute__ ((interrupt(WDT_VECTOR))) WDT_ISR (void)
 #error Compiler not supported!
 #endif
 {
+  
   P1DIR ^= BIT0 ;
   InitializeADC12();				// photoresist check
   checkParkingThreshold();
   updateLEDs();
   // Range check
-  InitializeTimerA();
-  InitializeTimerB();
+  getRange();
+  exitGateFunc();
   
 }	
 // Port 1 interrupt service routine
@@ -814,23 +835,28 @@ void __attribute__ ((interrupt(TIMER1_A0_VECTOR))) TIMER1_A0_ISR (void)
   TA1CTL = TASSEL_2 + MC_0 + TACLR + ID_0;
   TA1CCTL0 &= ~CCIE;
 }
-//TimerB capture configuration
+// TimerB capture configuration
 #pragma vector=TIMERB0_VECTOR
 __interrupt void TimerB0(void)
 {
-  if(ind){
+  if(pulse){
     //range = TBCCR0;
     TBCCTL0 |= CM_2 + SCS + CCIS_1 + CAP + CCIE; 
     TBCTL |= CNTL_0 + TBSSEL_2 + MC_2 + ID_0 + TBCLR;		// 16-bit length, SMCLK(16MHz), Devider-8, continius-up counting mode,
-    ind =2;
+    pulse = 0;
     TBCCTL0 &= ~CCIFG;
   }else{
     range = TBCCR0;
 
-    if (temp2 < 5568)
-       P1OUT |= BIT1 ;
-    else 
-      P1OUT &= ~BIT1;
+    if (range < 5568){
+        P1OUT |= BIT1 ;
+		rangeStat = 1;		
+	}
+    else{
+		P1OUT &= ~BIT1;
+		rangeStat = 0;	  
+	} 
+
     TBCCTL0 &= ~CCIFG;
   }
     
