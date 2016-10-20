@@ -14,6 +14,8 @@ void closeExitGate();
 void rotateRightM2(int steps);
 void rotateLeftM2(int steps);
 
+void displayNearestPark();
+
 // 2) Initilizations
 void InitilaizeUART();
 void InitializeMotorsPins();
@@ -399,6 +401,30 @@ void exitGateFunc(){
 	}
 		
 	
+}
+void openGateFunc(){
+}
+void displayNearestPark(){
+  halLcdClearScreen();
+  halLcdPrintLineCol("Please go to",0,2,2);
+  
+  if(~B1){
+    halLcdPrintLineCol("B1",5,6,2);
+    return;
+  }
+  if(~A1){
+    halLcdPrintLineCol("A1",5,6,2);
+    return;
+  }
+  if(~A2){
+    halLcdPrintLineCol("A2",5,6,2);
+    return;
+  }
+  if(~A3){
+    halLcdPrintLineCol("A3",5,6,2);
+    return;
+  }
+  
 }
 // LEDs
 void updateLEDs(){
