@@ -76,7 +76,8 @@ void main(void)
 
   CpuMode = ACTIVE_MODE;
 
-  halLcdPrintLine("Welcome to BGU SmartLot", 0, 1);						// Welcome message to when booting up
+  halLcdPrintLineCol("Welcome to", 0, 4, 2);						// Welcome message to when booting up
+  halLcdPrintLineCol("BGU SmartLot", 4, 3, 2);
  
   
 /////////////////////////////////////////////////////////////////////  
