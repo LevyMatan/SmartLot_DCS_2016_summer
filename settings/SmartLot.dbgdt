@@ -38,7 +38,7 @@
         <expressions>
           
           
-        <item>A1result</item><item>A2result</item><item>A3result</item><item>B1result</item><item>range</item><item>rangeStat</item><item>gateStat</item><item></item></expressions>
+        <item>A1result</item><item>A2result</item><item>A3result</item><item>B1result</item><item>range</item><item>rangeStat</item><item>gateStat</item><item/></expressions>
         <col-names>
           
           
