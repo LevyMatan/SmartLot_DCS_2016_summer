@@ -2,6 +2,7 @@
 
 #include "msp430x54xA.h"
 #include "lcd.c"
+#define INT_MAX 100000000 // 100M
 // Functions Declarations
 /////////////////////////
 // 1) Gate functions - control step motors
@@ -856,7 +857,7 @@ __interrupt void TimerB0(void)
   }else{
     range = TBCCR0;
 
-    if (range < 5568){        
+    if (range < 5568){                                     
         counter++;
         if (counter > 2){
 		rangeStat = 1;
