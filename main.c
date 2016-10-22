@@ -857,7 +857,7 @@ __interrupt void TimerB0(void)
   }else{
     range = TBCCR0;
 
-    if (range < 5568){                                     
+    if (range < 5568){   									// 5568 ~ 6[cm]                                  
         counter++;
         if (counter > 2){
 		rangeStat = 1;
