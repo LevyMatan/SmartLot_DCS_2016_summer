@@ -3,6 +3,7 @@
 #include "msp430x54xA.h"
 #include "lcd.c"
 // Functions Declarations
+/////////////////////////
 // 1) Gate functions - control step motors
 void rotateRightM1(int steps);
 void rotateLeftM1(int steps);
@@ -44,7 +45,7 @@ void delayCheck();
 void displayNearestPark();
 
 // Variables
-// =========
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ADC12 results ( Photoresist sensors )
 volatile int A1result, A2result, A3result, B1result;
 // A1result <- P6.0
@@ -52,13 +53,14 @@ volatile int A1result, A2result, A3result, B1result;
 // A3result <- P6.2
 // B1result <- P6.3
 int A1 = 0, A2 = 0, A3 = 0, B1 = 0; // 0 = free parking space, 1 = Occupied
-int thr = 300 ; // threshold for photoresist sensors
-long range = 0; // range of target from sensor
-int pulse = 1;	// flag for pulse
-int counter = 0; //
-int ind;		// stuiped index
-int rangeStat = 0; // 0 - no close target, 1 - close target
-int gateStat = 0; // 0 - gate is close, 1 - gate is open
+int thr = 300 ; 					// threshold for photoresist sensors
+long range = 6000; 					// range of target from sensor
+int pulse = 1;						// flag for pulse: 1 = send pulse; 0 = Read pulse
+int counter = 0; 					// count Range reads ( we make a decision only if we have 3 reads thats indicates the same action)
+int ind;							// stuiped index
+int rangeStat = 0; 					// 0 - no close target, 1 - close target
+int gateStat = 0; 					// 0 - gate is close, 1 - gate is open
+
 // ==========
 // == MAIN ==
 // ==========
@@ -116,7 +118,11 @@ void main(void)
   __bis_SR_register(LPM0_bits + GIE);       // Enter LPM0, interrupts enabled
   __no_operation();                         // For debugger
 }
-// Initializations
+
+/////////////////////////////
+//         FUNCTIONS
+/////////////////////////////
+// 1) Initializations
 void InitializeUART(){
 	P5SEL |= BIT6+BIT7;                       // P5.6,p5.7 UART option select
 	UCA1CTL1 |= UCSWRST;                      // **Put state machine in reset**
@@ -219,7 +225,6 @@ void InitializeLEDsPins(){
         return;
 
 }
-
 void InitializeTimerA(){
   pulse = 1 ;
   P5DIR |= BIT0;                            // P5.0 output
@@ -242,7 +247,7 @@ void InitializeTimerB(){
 
 }
 
-  // Delay
+// 2) Delay
 void delay(long value){
 	// At clk 16MHZ:
 	// value = 2000000 ~ 500ms
@@ -253,8 +258,6 @@ void delay(long value){
 }
 
 //Gates Function (rotating step motors)
-
-
 void rotateLeftM1(int steps){
 	// Description
 	/*
@@ -319,7 +322,6 @@ void rotateRightM1(int steps){
 
         return;
 }
-
 void openGate(){
 	rotateRightM1(124); // ~90 degrees  
         return;
@@ -330,50 +332,26 @@ void closeGate(){
 }
 
 void exitGateFunc(){
-	__bic_SR_register(GIE);       // interrupts disabled
-	if ( rangeStat && !gateStat ){ // near target and gate is closed
+	__bic_SR_register(GIE);       			// interrupts disabled
+	if ( rangeStat && !gateStat ){ 			// near target and gate is closed
 		openGate();
 		delay(200000);
-        gateStat = 1;
+        gateStat = 1;						// gateStat 1 => THe gate is open
 		return ;
-	}else if ( rangeStat && gateStat ){ // near target and gate is open
+	}else if ( rangeStat && gateStat ){ 	// near target and gate is open
 		delay(200000);
 		return ;
-	}else if ( !rangeStat && !gateStat ){ // no near target and gate is closed
+	}else if ( !rangeStat && !gateStat ){ 	// no near target and gate is closed
 		delay(200000);
 		return ;
-	}else if ( !rangeStat && gateStat ){ // no near target and gate is open
+	}else if ( !rangeStat && gateStat ){ 	// no near target and gate is open
 		closeGate();
 		delay(200000);
-                gateStat = 0;
+        gateStat = 0;						// gateStat 1 => THe gate is open
 		return ;
 	}
-		
-	
 }
 
-void displayNearestPark(){
-  halLcdClearScreen();
-  halLcdPrintLineCol("Please go to",0,2,2);
-  
-  if(~B1){
-    halLcdPrintLineCol("B1",5,6,2);
-    return;
-  }
-  if(~A1){
-    halLcdPrintLineCol("A1",5,6,2);
-    return;
-  }
-  if(~A2){
-    halLcdPrintLineCol("A2",5,6,2);
-    return;
-  }
-  if(~A3){
-    halLcdPrintLineCol("A3",5,6,2);
-    return;
-  }
-  
-}
 // LEDs
 void updateLEDs(){
 	if(A1){
@@ -418,6 +396,7 @@ void getRange(){
 		delay(2000000);
         return;
 }
+
 // Photo resist
 void checkParkingThreshold(){
 	if(A1result < thr)
@@ -438,6 +417,7 @@ void checkParkingThreshold(){
 		B1 = 0;
         return;
 }
+
 // General
 void setPinInput(int port, int pin){
 	int bit = 0;
@@ -703,6 +683,8 @@ void setPinLow(int port, int pin){
 	}
         return;
 }
+
+// Test Functions
 void delayCheck(){
 	P1DIR |= BIT0;
 	for(int i = 0; i<20; i++){
@@ -711,6 +693,28 @@ void delayCheck(){
 	}	 
 }
 
+// DTMF + Parking procedures
+void displayNearestPark(){
+  halLcdClearScreen();
+  halLcdPrintLineCol("Please go to",0,2,2);
+  
+  if(~B1){
+    halLcdPrintLineCol("B1",5,6,2);
+    return;
+  }
+  if(~A1){
+    halLcdPrintLineCol("A1",5,6,2);
+    return;
+  }
+  if(~A2){
+    halLcdPrintLineCol("A2",5,6,2);
+    return;
+  }
+  if(~A3){
+    halLcdPrintLineCol("A3",5,6,2);
+    return;
+  }  
+}
 // ========
 // Interups
 // ========
