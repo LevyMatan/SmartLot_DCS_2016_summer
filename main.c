@@ -8,7 +8,6 @@
 // 1) Gate functions - control step motors
 void rotateRightM1(int steps);
 void rotateLeftM1(int steps);
-
 void openGate();
 void closeGate();
 
@@ -32,6 +31,7 @@ void setPinInput(int port, int pin);
 void setPinOutput(int port, int pin);
 void setPinHigh(int port, int pin);
 void setPinLow(int port, int pin);
+void updateLEDs();
 
 // 5) Photoresist Sensors
 void checkParkingThreshold();
@@ -54,7 +54,7 @@ volatile int A1result, A2result, A3result, B1result;
 // A3result <- P6.2
 // B1result <- P6.3
 int A1 = 0, A2 = 0, A3 = 0, B1 = 0; // 0 = free parking space, 1 = Occupied
-int thr = 300 ; 					// threshold for photoresist sensors
+int thr = 60 ; 					// threshold for photoresist sensors
 long range = 6000; 					// range of target from sensor
 int pulse = 1;						// flag for pulse: 1 = send pulse; 0 = Read pulse
 int counter = 0; 					// count Range reads ( we make a decision only if we have 3 reads thats indicates the same action)
@@ -89,21 +89,15 @@ void main(void)
 
   halLcdPrintLineCol("Welcome to", 0, 4, 2);						// Welcome message to when booting up
   halLcdPrintLineCol("BGU SmartLot", 4, 3, 2);
- 
-  
+
+        asm("nop;");
 /////////////////////////////////////////////////////////////////////  
 ///////////////////////////////////////////////////////////////////// 
 	InitializeMotorsPins();
-	InitializeLEDsPins();        
-        while(1){
-          asm("nop;");
-          
-          P8OUT = BIT5 + BIT6;
-          P5OUT = BIT5 + BIT4;
-          P4OUR = BIT5 + BIT6 + BIT7;
-          P7OUT = BIT3;  
-          asm("nop;");
-        }
+	InitializeLEDsPins(); 
+	asm("nop;");
+	updateLEDs();
+	asm("nop;");
         P1DIR |= BIT0;
         P1DIR |= BIT1;
         P1OUT = BIT0;
@@ -333,18 +327,18 @@ void exitGateFunc(){
 	__bic_SR_register(GIE);       			// interrupts disabled
 	if ( rangeStat && !gateStat ){ 			// near target and gate is closed
 		openGate();
-		delay(400000);
+		delay(1000);
         gateStat = 1;						// gateStat 1 => THe gate is open
 		return ;
 	}else if ( rangeStat && gateStat ){ 	// near target and gate is open
-		delay(400000);
+		delay(1000);
 		return ;
 	}else if ( !rangeStat && !gateStat ){ 	// no near target and gate is closed
-		delay(400000);
+		delay(1000);
 		return ;
 	}else if ( !rangeStat && gateStat ){ 	// no near target and gate is open
 		closeGate();
-		delay(400000);
+		delay(1000);
         gateStat = 0;						// gateStat 1 => THe gate is open
 		return ;
 	}
@@ -353,12 +347,12 @@ void exitGateFunc(){
 // LEDs
 void updateLEDs(){
 	if(A1){
-		setPinHigh(8,6);
-		setPinLow(8,5);
+		P8OUT |= BIT6;
+		P8OUT &= ~BIT5;
 	}		
 	else{
-		setPinHigh(8,5);
-		setPinLow(8,6);		
+		P8OUT |= BIT5;
+		P8OUT &= ~BIT6;	
 	}
 	if(A2){
 		setPinHigh(7,3);
@@ -391,7 +385,7 @@ void updateLEDs(){
 void getRange(){
 		InitializeTimerA();
         InitializeTimerB();
-		delay(4000000);
+		delay(2000);
         return;
 }
 
@@ -713,6 +707,7 @@ void displayNearestPark(){
     return;
   }  
 }
+
 // ========
 // Interups
 // ========
@@ -798,11 +793,11 @@ void __attribute__ ((interrupt(WDT_VECTOR))) WDT_ISR (void)
   updateLEDs();						// Set LEDs according to parking status	
   // Range check - Triple check for noise robust
   getRange();						// Read Ultrasonic sensor measure (range / 58 = range[cm])	
-  delay(40000);
-  getRange();						// Read Ultrasonic sensor measure (range / 58 = range[cm])
-  delay(40000);
-  getRange();						// Read Ultrasonic sensor measure (range / 58 = range[cm])
-  delay(40000);
+  delay(10);
+  //getRange();						// Read Ultrasonic sensor measure (range / 58 = range[cm])
+  //delay(10);
+  //getRange();						// Read Ultrasonic sensor measure (range / 58 = range[cm])
+  //delay(10);
   
   exitGateFunc();					// Depends on status of gate and whether there is a close target or not decides to open or close gate
   
