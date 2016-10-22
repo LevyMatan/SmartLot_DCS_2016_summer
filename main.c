@@ -10,7 +10,6 @@ void rotateLeftM1(int steps);
 void openGate();
 void closeGate();
 
-
 void exitGateFunc();
 
 // 2) Initilizations
@@ -790,16 +789,23 @@ void __attribute__ ((interrupt(WDT_VECTOR))) WDT_ISR (void)
 #error Compiler not supported!
 #endif
 {
-  SFRIE1 &= ~WDTIE;
-  P1DIR ^= BIT0 ;
-  InitializeADC12();				// photoresist check
-  checkParkingThreshold();
-  updateLEDs();
-  // Range check
-  getRange();
-  exitGateFunc();
-  __bis_SR_register( GIE);       //  interrupts enabled
-	SFRIE1 |= WDTIE;
+  SFRIE1 &= ~WDTIE;					// Disable WatchDog Interrupt
+  P1DIR ^= BIT0 ;					// Blink LED1 (Board LED) - indicates we start scaning sensors
+  InitializeADC12();				// Read Photoresist Signal
+  checkParkingThreshold();			// From the read decide what parking are free or occuipied
+  updateLEDs();						// Set LEDs according to parking status	
+  // Range check - Triple check for noise robust
+  getRange();						// Read Ultrasonic sensor measure (range / 58 = range[cm])	
+  delay(20000);
+  getRange();						// Read Ultrasonic sensor measure (range / 58 = range[cm])
+  delay(20000);
+  getRange();						// Read Ultrasonic sensor measure (range / 58 = range[cm])
+  delay(20000);
+  
+  exitGateFunc();					// Depends on status of gate and whether there is a close target or not decides to open or close gate
+  
+  __bis_SR_register( GIE);       	// Interrupts Enabled
+  SFRIE1 |= WDTIE;					// Enable WatchDog Interrupt
   return;
   
 }	
