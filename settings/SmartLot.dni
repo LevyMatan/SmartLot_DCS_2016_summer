@@ -30,7 +30,7 @@ ActionState=1
 Enabled=0
 ShowSource=1
 [DebugChecksum]
-Checksum=1785654378
+Checksum=2095562724
 [State Storage]
 Control Register=0
 [Sequencer]
@@ -64,7 +64,10 @@ Graph=0
 Symbiont=0
 Exclusions=
 [Breakpoints]
-Count=0
+Bp0=_ "STD_CODE" "{$PROJ_DIR$\main.c}.102.2" 1 0 0 0 "" 0 ""
+Bp1=_ "STD_CODE" "{$PROJ_DIR$\main.c}.106.2" 1 0 0 0 "" 0 ""
+Bp2=_ "STD_CODE" "{$PROJ_DIR$\main.c}.834.3" 1 0 0 0 "" 0 ""
+Count=3
 [FET]
 Clock mode=14
 Extended Clock mode=-1
