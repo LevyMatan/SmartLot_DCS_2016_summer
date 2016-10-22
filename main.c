@@ -2,7 +2,8 @@
 
 #include "msp430x54xA.h"
 #include "lcd.c"
-#define INT_MAX 4000000 // 2M
+#define INT_MAX 4000000       // 2M
+#define RANGE_OPEN 12064      // 13[cm] * 16 * 58 = 12064
 // Functions Declarations
 /////////////////////////
 // 1) Gate functions - control step motors
@@ -22,6 +23,7 @@ void InitializeLEDsPins();
 void InitializeUltrasonic();
 void InitializeTimerA();
 void InitializeTimerB();
+void InitializeDTMF();
 
 // 3) Delay
 void delay(long value);
@@ -98,6 +100,11 @@ void main(void)
 	asm("nop;");
 	updateLEDs();
 	asm("nop;");
+	InitializeDTMF();
+	__bis_SR_register(LPM0_bits + GIE);       // Enter LPM0, interrupts enabled
+	__no_operation(); 
+	while(1);
+        //rotateRightM1(125);
         P1DIR |= BIT0;
         P1DIR |= BIT1;
         P1OUT = BIT0;
@@ -235,6 +242,14 @@ void InitializeTimerB(){
    return;
 
 }
+void InitializeDTMF(){
+	P1DIR &= BIT4; 								// Set P1.4 as Input
+	P1REN |= BIT4;                            	// Enable P1.4 internal resistance
+	P1OUT &= ~BIT4;                             // Set P1.4 as pull-Down resistance
+	P1IE |= BIT4;                             	// P1.4 interrupt enabled
+	P1IES &= ~BIT4;                             // P1.4 Hi/Lo edge
+	P1IFG &= ~BIT4;                             // P1.4 IFG cleared
+}
 
 // 2) Delay
 void delay(long value){
@@ -325,18 +340,18 @@ void closeGate(){
 
 void exitGateFunc(){
 	__bic_SR_register(GIE);       			// interrupts disabled
-	if ( rangeStat && !gateStat ){ 			// near target and gate is closed
+	if ( rangeStat & (!gateStat) ){ 			// near target and gate is closed
 		openGate();
 		delay(1000);
         gateStat = 1;						// gateStat 1 => THe gate is open
 		return ;
-	}else if ( rangeStat && gateStat ){ 	// near target and gate is open
-		delay(1000);
+	}else if ( rangeStat & gateStat ){ 	// near target and gate is open
+		delay(1);
 		return ;
-	}else if ( !rangeStat && !gateStat ){ 	// no near target and gate is closed
-		delay(1000);
+	}else if ( (!rangeStat) & (!gateStat) ){ 	// no near target and gate is closed
+		delay(1);
 		return ;
-	}else if ( !rangeStat && gateStat ){ 	// no near target and gate is open
+	}else if ( (!rangeStat) & gateStat ){ 	// no near target and gate is open
 		closeGate();
 		delay(1000);
         gateStat = 0;						// gateStat 1 => THe gate is open
@@ -816,6 +831,7 @@ void __attribute__ ((interrupt(PORT1_VECTOR))) Port_1 (void)
 #error Compiler not supported!
 #endif
 {
+  asm("nop;");
   P1OUT ^= 0x01;                            // P1.0 = toggle
   P1IFG &= ~0x010;                          // P1.4 IFG cleared
 }
@@ -849,7 +865,7 @@ __interrupt void TimerB0(void)
   }else{
     range = TBCCR0;
 
-    if (range < 5568){   									// 5568 ~ 6[cm]                                  
+    if (range < RANGE_OPEN){   									// 5568 ~ 6[cm]                                  
         counter++;
         if (counter > 2){
 		rangeStat = 1;
