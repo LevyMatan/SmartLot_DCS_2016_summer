@@ -14,6 +14,7 @@ void closeExitGate();
 void rotateRightM2(int steps);
 void rotateLeftM2(int steps);
 
+void exitGateFunc();
 void displayNearestPark();
 
 // 2) Initilizations
@@ -38,6 +39,9 @@ void setPinLow(int port, int pin);
 // 5) Photoresist Sensors
 void checkParkingThreshold();
 
+// 6) Ultrasonic
+void getRange();
+
 // Variables
 // =========
 // ADC12 results ( Photoresist sensors )
@@ -50,6 +54,7 @@ int A1 = 0, A2 = 0, A3 = 0, B1 = 0; // 0 = free parking space, 1 = Occupied
 int thr = 300 ; // threshold for photoresist sensors
 long range = 0; // range of target from sensor
 int pulse = 1;	// flag for pulse
+int counter = 0; //
 int ind;		// stuiped index
 int rangeStat = 0; // 0 - no close target, 1 - close target
 int gateStat = 0; // 0 - gate is close, 1 - gate is open
@@ -85,7 +90,22 @@ void main(void)
 /////////////////////////////////////////////////////////////////////  
 ///////////////////////////////////////////////////////////////////// 
 	InitializeMotorsPins();
-	//InitializeADC12();
+	InitializeLEDsPins();        
+           while(1){
+          P5DIR |= BIT0;
+          setPinHigh(5,0);
+          delay(10);
+          setPinLow(5,0);
+          
+          P4DIR |= BIT0;
+          setPinHigh(4,0);
+          delay(10);
+          setPinLow(4,0);
+          rotateRightM1(50);
+          delay(1);
+          rotateLeftM1(50);
+          delay(1);
+        }  
         P1DIR |= BIT0;
         P1DIR |= BIT1;
         P1OUT = BIT0;
@@ -108,11 +128,13 @@ void InitializeUART(){
 	UCA1MCTL |= UCBRS_5 + UCBRF_0;            // Modulation UCBRSx=5, UCBRFx=0
 	UCA1CTL1 &= ~UCSWRST;                     // **Initialize USCI state machine**
 	UCA1IE |= UCRXIE;                         // Enable USCI_A1 RX interrupt
+        return;
 	
 }
 void InitializeWD(){
     WDTCTL = WDTPW + WDTSSEL_1 + WDTTMSEL + WDTIS_5;                     // WDT 32ms, SMCLK, interval timer 
     SFRIE1 |= WDTIE;                          // Enable WDT interrupt
+    return;
 }
 void InitializeADC12(){
   //WDTCTL = WDTPW+WDTHOLD;                   // Stop watchdog timer
@@ -146,7 +168,7 @@ void InitializeADC12(){
   ADC12IE = ADC12IE3 ;                       // Enable ADC12IFG.3
   ADC12CTL0 |= ADC12ENC;                     // Enable conversions
   ADC12CTL0 |= ADC12SC; 		     		 // start convertion
- 
+  return;
 }
 void InitializeMotorsPins(){
 	// MOTOR 1: 
@@ -154,14 +176,10 @@ void InitializeMotorsPins(){
 	// INT2 -> P10.5
 	// INT3 -> P10.3
 	// INT4 -> P10.1
-	// MOTOR 2: 
-	// INT1 -> P10.6
-	// INT2 -> P10.4
-	// INT3 -> P10.2
-	// INT4 -> P10.0
 	
 	P10SEL = 0x00 ; // All P10 pins are set to general I/O
 	P10DIR = 0xFF ; // All P10 pins are configured as outputs
+    return;
 }
 void InitializeLEDsPins(){
 	
@@ -197,34 +215,29 @@ void InitializeLEDsPins(){
 	P4SEL &= ~BIT5;
 	setPinOutput(4,5);
 	setPinLow(4,5);
+        return;
 
 }
-void InitializeUltrasonic(){
-	
-  P1DIR |= 0x01;                            // Set P1.0 to output direction
-  P1REN |= 0x10;                            // Enable P1.4 internal resistance
-  P1OUT |= 0x10;                            // Set P1.4 as pull-Up resistance
-  P1IE |= 0x10;                             // P1.4 interrupt enabled
-  P1IES |= 0x10;                            // P1.4 Hi/Lo edge
-  P1IFG &= ~0x10;                           // P1.4 IFG cleared
-}
+
 void InitializeTimerA(){
-  ind = 1 ;
-  P5DIR |= 0x01;                            // P5.0 output
-  P5OUT |= 0x01;
+  pulse = 1 ;
+  P5DIR |= BIT0;                            // P5.0 output
+  P5OUT |= BIT0;
   TA1CCTL0 = CCIE;                          // CCR0 interrupt enabled
   TA1CCR0 = 1600;
   TA1CTL = TASSEL_2 + MC_1 + TACLR + ID_0;  // SMCLK devided by 8, upmode, clear TAR
+  _BIS_SR(GIE); 
+  return;
 }
 void InitializeTimerB(){
 
-  P4DIR = 0x00;                             // Set P4.0 input dir
-  P4SEL = 0x01;                             // Set P4.0 to TB0
+  P4DIR &= ~BIT0;                             // Set P4.0 input dir
+  P4SEL |= BIT0;                             // Set P4.0 to TB0
   TBCCTL0 |= CM_1 + SCS + CCIS_1 + CAP + CCIE; 
   TBCTL |= CNTL_0 + TBSSEL_2 + MC_2 + ID_0;		// 16-bit length, SMCLK(16MHz), Devider-8, continius-up counting mode,
   
-  _BIS_SR(GIE);   // interrupt
-   
+  _BIS_SR(GIE);   							// interrupt
+   return;
 
 }
 
@@ -234,16 +247,13 @@ void delay(long value){
 	// value = 2000000 ~ 500ms
 	// value = 
 	long ind = 0;
-	for(ind = 0 ; ind < value; ind++ );	
+	for(ind = 0 ; ind < value; ind++ );
+        return;	
 }
 
 //Gates Function (rotating step motors)
-void openEntranceGate(){
-	rotateLeftM1(124); // ~90 degrees     
-}
-void closeEntranceGate(){
-	rotateRightM1(124);
-}
+
+
 void rotateLeftM1(int steps){
 	// Description
 	/*
@@ -258,23 +268,22 @@ void rotateLeftM1(int steps){
 	124 steps ~ 90 degrees
 	
 	*/
+
 	for ( int ind = 0; ind < steps ; ind++){
-	  setPinHigh(10,7);
-	  delay(20000); 
-	  setPinLow(10,7);   
+	  P10OUT = BIT7 + BIT5; // INT1 + INT2
+	  delay(20000); 	    
 		  
-	  setPinHigh(10,5);
-	  delay(20000);
-	  setPinLow(10,5);
+	  P10OUT = BIT5 + BIT3; // INT2 + INT3
+	  delay(20000);	  
 	  
-	  setPinHigh(10,3);
+	  P10OUT = BIT3 + BIT1; // INT3 + INT4
 	  delay(20000);
-	  setPinLow(10,3);
-	  
-	  setPinHigh(10,1);
-	  delay(20000);
-	  setPinLow(10,1);
+
+	  P10OUT = BIT7 + BIT1; // INT4 + INT1
+	  delay(20000);	  
 	}
+
+        return;
 }
 void rotateRightM1(int steps){
 	// Description
@@ -290,120 +299,58 @@ void rotateRightM1(int steps){
 	124 steps ~ 90 degrees
 	
 	*/
+
 	for ( int ind = 0; ind < steps ; ind++){
-	  setPinHigh(10,1);
-	  delay(20000); 
-	  setPinLow(10,1);   
+		
+	  P10OUT = BIT7 + BIT1; // INT1 + INT4
+	  delay(20000); 	    
 		  
-	  setPinHigh(10,3);
-	  delay(20000);
-	  setPinLow(10,3);
+	  P10OUT = BIT3 + BIT1; // INT3 + INT4
+	  delay(20000);	  
 	  
-	  setPinHigh(10,5);
+	  P10OUT = BIT5 + BIT3; // INT2 + INT3
 	  delay(20000);
-	  setPinLow(10,5);
+
+	  P10OUT = BIT7 + BIT5; // INT2 + INT1
+	  delay(20000);	 
 	  
-	  setPinHigh(10,7);
-	  delay(20000);
-	  setPinLow(10,7);
 	}
+
+        return;
 }
 
 void openExitGate(){
-	rotateRightM2(124); // ~90 degrees     
+	rotateRightM1(124); // ~90 degrees  
+        return;
 }
 void closeExitGate(){
-	rotateLeftM2(124);
-}
-void rotateRightM2(int steps){
-	// Description
-	/*
-	this function will rotate the step motor N steps to the right
-	the pins of the motor are connected:
-	INT1 -> P10.6
-	INT2 -> P10.4
-	INT3 -> P10.2
-	INT4 -> P10.0
-	
-	Steps to degrees:
-	124 steps ~ 90 degrees
-	
-	*/
-	for ( int ind = 0; ind < steps ; ind++){
-	  setPinHigh(10,0);
-	  delay(20000); 
-	  setPinLow(10,0);   
-		  
-	  setPinHigh(10,2);
-	  delay(20000);
-	  setPinLow(10,2);
-	  
-	  setPinHigh(10,4);
-	  delay(20000);
-	  setPinLow(10,4);
-	  
-	  setPinHigh(10,6);
-	  delay(20000);
-	  setPinLow(10,6);
-	}
-}
-void rotateLeftM2(int steps){
-	// Description
-	/*
-	this function will rotate the step motor N steps to the right
-	the pins of the motor are connected:
-	INT1 -> P10.6
-	INT2 -> P10.4
-	INT3 -> P10.2
-	INT4 -> P10.0
-	
-	Steps to degrees:
-	124 steps ~ 90 degrees
-	
-	*/
-	for ( int ind = 0; ind < steps ; ind++){
-	  setPinHigh(10,6);
-	  delay(20000); 
-	  setPinLow(10,6);   
-		  
-	  setPinHigh(10,4);
-	  delay(20000);
-	  setPinLow(10,4);
-	  
-	  setPinHigh(10,2);
-	  delay(20000);
-	  setPinLow(10,2);
-	  
-	  setPinHigh(10,0);
-	  delay(20000);
-	  setPinLow(10,0);
-	}
+	rotateLeftM1(124);
+        return;
 }
 
 void exitGateFunc(){
-	if ( rangeStat && ~gateStat ){ // near target and gate is closed
+	__bic_SR_register(GIE);       // interrupts disabled
+	if ( rangeStat && !gateStat ){ // near target and gate is closed
 		openExitGate();
 		delay(200000);
+        gateStat = 1;
 		return ;
-	}
-		if ( rangeStat && gateStat ){ // near target and gate is open
+	}else if ( rangeStat && gateStat ){ // near target and gate is open
 		delay(200000);
 		return ;
-	}
-		if ( ~rangeStat && ~gateStat ){ // no near target and gate is closed
+	}else if ( !rangeStat && !gateStat ){ // no near target and gate is closed
 		delay(200000);
 		return ;
-	}
-		if ( ~rangeStat && gateStat ){ // no near target and gate is open
+	}else if ( !rangeStat && gateStat ){ // no near target and gate is open
 		closeExitGate();
 		delay(200000);
+                gateStat = 0;
 		return ;
 	}
 		
 	
 }
-void openGateFunc(){
-}
+
 void displayNearestPark(){
   halLcdClearScreen();
   halLcdPrintLineCol("Please go to",0,2,2);
@@ -459,13 +406,16 @@ void updateLEDs(){
 	else{
 		setPinHigh(4,5);
 		setPinLow(4,6);		
-	}	
+	}
+        return;	
 }
 
 // UltraSonic
 void getRange(){
-	InitializeTimerA();
-    InitializeTimerB();
+		InitializeTimerA();
+        InitializeTimerB();
+		delay(2000000);
+        return;
 }
 // Photo resist
 void checkParkingThreshold(){
@@ -485,6 +435,7 @@ void checkParkingThreshold(){
 		B1 = 1 ;
 	else 
 		B1 = 0;
+        return;
 }
 // General
 void setPinInput(int port, int pin){
@@ -551,6 +502,7 @@ void setPinInput(int port, int pin){
 			break;
 
 	}
+        return;
 }
 void setPinOutput(int port, int pin){
 	int bit = 0;
@@ -616,6 +568,7 @@ void setPinOutput(int port, int pin){
 			break;
 
 	}
+        return;
 }
 void setPinHigh(int port, int pin){
 	int bit = 0;
@@ -681,6 +634,7 @@ void setPinHigh(int port, int pin){
 			break;
 
 	}
+        return;
 }
 void setPinLow(int port, int pin){
 	int bit = 0;
@@ -746,6 +700,7 @@ void setPinLow(int port, int pin){
 			break;
 
 	}
+        return;
 }
 
 
@@ -769,6 +724,7 @@ __interrupt void USCI_A1_ISR(void)
   default: 
     break;
   }
+  return;
 }
 // ADC12 Interrupt Service Routine
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
@@ -813,7 +769,8 @@ void __attribute__ ((interrupt(ADC12_VECTOR))) ADC12ISR (void)
 									 
 	                           
   default: break; 
-  }  
+  }
+  return;  
 }
 // Watchdog Timer interrupt service routine
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
@@ -825,7 +782,7 @@ void __attribute__ ((interrupt(WDT_VECTOR))) WDT_ISR (void)
 #error Compiler not supported!
 #endif
 {
-  
+  SFRIE1 &= ~WDTIE;
   P1DIR ^= BIT0 ;
   InitializeADC12();				// photoresist check
   checkParkingThreshold();
@@ -833,6 +790,9 @@ void __attribute__ ((interrupt(WDT_VECTOR))) WDT_ISR (void)
   // Range check
   getRange();
   exitGateFunc();
+  __bis_SR_register( GIE);       //  interrupts enabled
+	SFRIE1 |= WDTIE;
+  return;
   
 }	
 // Port 1 interrupt service routine
@@ -861,31 +821,39 @@ void __attribute__ ((interrupt(TIMER1_A0_VECTOR))) TIMER1_A0_ISR (void)
   P5OUT ^= 0x01;                            // Toggle P5.0
   TA1CTL = TASSEL_2 + MC_0 + TACLR + ID_0;
   TA1CCTL0 &= ~CCIE;
+  return;
 }
 // TimerB capture configuration
 #pragma vector=TIMERB0_VECTOR
 __interrupt void TimerB0(void)
 {
+  TBCCTL0 &= ~CCIFG;
   if(pulse){
-    //range = TBCCR0;
+
+    range = TBCCR0;
     TBCCTL0 |= CM_2 + SCS + CCIS_1 + CAP + CCIE; 
     TBCTL |= CNTL_0 + TBSSEL_2 + MC_2 + ID_0 + TBCLR;		// 16-bit length, SMCLK(16MHz), Devider-8, continius-up counting mode,
     pulse = 0;
-    TBCCTL0 &= ~CCIFG;
+
   }else{
     range = TBCCR0;
 
-    if (range < 5568){
-        P1OUT |= BIT1 ;
-		rangeStat = 1;		
+    if (range < 5568){        
+        counter++;
+        if (counter > 2){
+		rangeStat = 1;
+                P1OUT |= BIT1 ;	
+        }	
 	}
     else{
+                counter = 0;
 		P1OUT &= ~BIT1;
 		rangeStat = 0;	  
 	} 
 
-    TBCCTL0 &= ~CCIFG;
   }
+
+  return;
     
   
 }
