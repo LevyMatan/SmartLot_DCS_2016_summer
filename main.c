@@ -4,18 +4,14 @@
 #include "lcd.c"
 // Functions Declarations
 // 1) Gate functions - control step motors
-void openEntranceGate();
-void closeEntranceGate();
 void rotateRightM1(int steps);
 void rotateLeftM1(int steps);
 
-void openExitGate();
-void closeExitGate();
-void rotateRightM2(int steps);
-void rotateLeftM2(int steps);
+void openGate();
+void closeGate();
+
 
 void exitGateFunc();
-void displayNearestPark();
 
 // 2) Initilizations
 void InitilaizeUART();
@@ -41,6 +37,12 @@ void checkParkingThreshold();
 
 // 6) Ultrasonic
 void getRange();
+
+// 7) Test Functions
+void delayCheck();
+
+// 8) DTMF Functions + get into parking proccedures
+void displayNearestPark();
 
 // Variables
 // =========
@@ -319,11 +321,11 @@ void rotateRightM1(int steps){
         return;
 }
 
-void openExitGate(){
+void openGate(){
 	rotateRightM1(124); // ~90 degrees  
         return;
 }
-void closeExitGate(){
+void closeGate(){
 	rotateLeftM1(124);
         return;
 }
@@ -331,7 +333,7 @@ void closeExitGate(){
 void exitGateFunc(){
 	__bic_SR_register(GIE);       // interrupts disabled
 	if ( rangeStat && !gateStat ){ // near target and gate is closed
-		openExitGate();
+		openGate();
 		delay(200000);
         gateStat = 1;
 		return ;
@@ -342,7 +344,7 @@ void exitGateFunc(){
 		delay(200000);
 		return ;
 	}else if ( !rangeStat && gateStat ){ // no near target and gate is open
-		closeExitGate();
+		closeGate();
 		delay(200000);
                 gateStat = 0;
 		return ;
@@ -702,7 +704,13 @@ void setPinLow(int port, int pin){
 	}
         return;
 }
-
+void delayCheck(){
+	P1DIR |= BIT0;
+	for(int i = 0; i<20; i++){
+		delay(INT_MAX);
+		P1OUT ^= BIT0;
+	}	 
+}
 
 // ========
 // Interups
