@@ -2,7 +2,7 @@
 
 #include "msp430x54xA.h"
 #include "lcd.c"
-#define INT_MAX 100000000 // 100M
+#define INT_MAX 4000000 // 2M
 // Functions Declarations
 /////////////////////////
 // 1) Gate functions - control step motors
@@ -95,21 +95,15 @@ void main(void)
 ///////////////////////////////////////////////////////////////////// 
 	InitializeMotorsPins();
 	InitializeLEDsPins();        
-           while(1){
-          P5DIR |= BIT0;
-          setPinHigh(5,0);
-          delay(10);
-          setPinLow(5,0);
+        while(1){
+          asm("nop;");
           
-          P4DIR |= BIT0;
-          setPinHigh(4,0);
-          delay(10);
-          setPinLow(4,0);
-          rotateRightM1(50);
-          delay(1);
-          rotateLeftM1(50);
-          delay(1);
-        }  
+          P8OUT = BIT5 + BIT6;
+          P5OUT = BIT5 + BIT4;
+          P4OUR = BIT5 + BIT6 + BIT7;
+          P7OUT = BIT3;  
+          asm("nop;");
+        }
         P1DIR |= BIT0;
         P1DIR |= BIT1;
         P1OUT = BIT0;
@@ -251,7 +245,7 @@ void InitializeTimerB(){
 // 2) Delay
 void delay(long value){
 	// At clk 16MHZ:
-	// value = 2000000 ~ 500ms
+	// value = 4000000 ~ 500ms
 	// value = 
 	long ind = 0;
 	for(ind = 0 ; ind < value; ind++ );
@@ -276,16 +270,18 @@ void rotateLeftM1(int steps){
 
 	for ( int ind = 0; ind < steps ; ind++){
 	  P10OUT = BIT7 + BIT5; // INT1 + INT2
-	  delay(20000); 	    
-		  
+	  delay(4000); 	    
+	  P10OUT = 0x00;
 	  P10OUT = BIT5 + BIT3; // INT2 + INT3
-	  delay(20000);	  
-	  
+	  delay(4000);	  
+	  P10OUT = 0x00;
 	  P10OUT = BIT3 + BIT1; // INT3 + INT4
-	  delay(20000);
-
+	  delay(4000);
+          P10OUT = 0x00;
 	  P10OUT = BIT7 + BIT1; // INT4 + INT1
-	  delay(20000);	  
+	  delay(4000);	
+          P10OUT = 0x00;
+          delay(5000);
 	}
 
         return;
@@ -308,17 +304,18 @@ void rotateRightM1(int steps){
 	for ( int ind = 0; ind < steps ; ind++){
 		
 	  P10OUT = BIT7 + BIT1; // INT1 + INT4
-	  delay(20000); 	    
-		  
+	  delay(4000); 	    
+	  P10OUT = 0x00;  
 	  P10OUT = BIT3 + BIT1; // INT3 + INT4
-	  delay(20000);	  
-	  
+	  delay(4000);	  
+	  P10OUT = 0x00;
 	  P10OUT = BIT5 + BIT3; // INT2 + INT3
-	  delay(20000);
-
+	  delay(4000);
+          P10OUT = 0x00;
 	  P10OUT = BIT7 + BIT5; // INT2 + INT1
-	  delay(20000);	 
-	  
+	  delay(4000);	 
+	  P10OUT = 0x00;
+          delay(4000);
 	}
 
         return;
@@ -336,18 +333,18 @@ void exitGateFunc(){
 	__bic_SR_register(GIE);       			// interrupts disabled
 	if ( rangeStat && !gateStat ){ 			// near target and gate is closed
 		openGate();
-		delay(200000);
+		delay(400000);
         gateStat = 1;						// gateStat 1 => THe gate is open
 		return ;
 	}else if ( rangeStat && gateStat ){ 	// near target and gate is open
-		delay(200000);
+		delay(400000);
 		return ;
 	}else if ( !rangeStat && !gateStat ){ 	// no near target and gate is closed
-		delay(200000);
+		delay(400000);
 		return ;
 	}else if ( !rangeStat && gateStat ){ 	// no near target and gate is open
 		closeGate();
-		delay(200000);
+		delay(400000);
         gateStat = 0;						// gateStat 1 => THe gate is open
 		return ;
 	}
@@ -394,7 +391,7 @@ void updateLEDs(){
 void getRange(){
 		InitializeTimerA();
         InitializeTimerB();
-		delay(2000000);
+		delay(4000000);
         return;
 }
 
@@ -801,11 +798,11 @@ void __attribute__ ((interrupt(WDT_VECTOR))) WDT_ISR (void)
   updateLEDs();						// Set LEDs according to parking status	
   // Range check - Triple check for noise robust
   getRange();						// Read Ultrasonic sensor measure (range / 58 = range[cm])	
-  delay(20000);
+  delay(40000);
   getRange();						// Read Ultrasonic sensor measure (range / 58 = range[cm])
-  delay(20000);
+  delay(40000);
   getRange();						// Read Ultrasonic sensor measure (range / 58 = range[cm])
-  delay(20000);
+  delay(40000);
   
   exitGateFunc();					// Depends on status of gate and whether there is a close target or not decides to open or close gate
   
