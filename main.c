@@ -118,14 +118,13 @@ void main(void)
 /////////////////////////////////////////////////////////////////////  
 ///////////////////////////////////////////////////////////////////// 
 	InitializeMotorsPins();
-        rotateRightM1(240);
+        rotateLeftM1(10);
 	InitializeLEDsPins(); 
 	asm("nop;");
 	updateLEDs();
 	asm("nop;");
 	InitializeDTMF();
 
-        //rotateRightM1(125);
         P1DIR |= BIT0;
         P1DIR |= BIT1;
         P1OUT = BIT0;
@@ -354,11 +353,11 @@ void rotateRightM1(int steps){
         return;
 }
 void openGate(){
-	rotateRightM1(124); // ~90 degrees  
+	rotateRightM1(130); // ~90 degrees  
         return;
 }
 void closeGate(){
-	rotateLeftM1(124);
+	rotateLeftM1(130);
         return;
 }
 
@@ -744,13 +743,19 @@ void displayNearestPark(){
   if(!A3){
     halLcdPrintLineCol("A3",5,6,2);
     return;
-  }  
+  }else {
+    halLcdPrintLineCol("Parking is Full",5,0,2);
+    return;
+  }
 }
 void checkPassword(){
 	if((CODE_1 == DIGIT_1) & (CODE_2 == DIGIT_2) & (CODE_3 == DIGIT_3) & (CODE_4 == DIGIT_4) ){
-		displayNearestPark();
-		gateStat = 1 ;
+		displayNearestPark();                
 		openGate();
+                delay(3000000);
+		gateStat = 1 ;
+                rangeStat = 1 ;
+                range = RANGE_OPEN + 100 ;
 				
 	}
 	else{
@@ -867,8 +872,7 @@ void __attribute__ ((interrupt(PORT1_VECTOR))) Port_1 (void)
 #endif
 {
   asm("nop;");
-   halLcdClearScreen();
-  halLcdPrintLineCol("Please go to",0,2,2);
+  halLcdClearScreen();
   switch(DTMFindex){
 	   case 1:
 		CODE_1 = P3IN & 0xF0;
