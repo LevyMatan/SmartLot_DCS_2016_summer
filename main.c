@@ -6,10 +6,24 @@
 #define RANGE_OPEN 12064      // 13[cm] * 16 * 58 = 12064
 
 // Set Gate Password Here..
-#define DIGIT_1 1
-#define DIGIT_2 2
-#define DIGIT_3 3
-#define DIGIT_4 4
+// The first Digit of the Hexdecimal value is the decimal value you enter on the phone
+// 1 = 1
+// 2 = 2
+// 3 = 3
+// 4 = 4
+// 5 = 5
+// 6 = 6
+// 7 = 7
+// 8 = 8
+// 9 = 9
+// 0 = A
+// * = B
+// # = C
+// The second digit og the Hex is always '0'
+#define DIGIT_1 0x90
+#define DIGIT_2 0x80
+#define DIGIT_3 0x70
+#define DIGIT_4 0x60
 
 // Functions Declarations
 /////////////////////////
@@ -104,14 +118,13 @@ void main(void)
 /////////////////////////////////////////////////////////////////////  
 ///////////////////////////////////////////////////////////////////// 
 	InitializeMotorsPins();
+        rotateRightM1(240);
 	InitializeLEDsPins(); 
 	asm("nop;");
 	updateLEDs();
 	asm("nop;");
 	InitializeDTMF();
-	__bis_SR_register(LPM0_bits + GIE);       // Enter LPM0, interrupts enabled
-	__no_operation(); 
-	while(1);
+
         //rotateRightM1(125);
         P1DIR |= BIT0;
         P1DIR |= BIT1;
@@ -251,12 +264,15 @@ void InitializeTimerB(){
 
 }
 void InitializeDTMF(){
-	P1DIR &= BIT4; 								// Set P1.4 as Input
-	P1REN |= BIT4;                            	// Enable P1.4 internal resistance
-	P1OUT &= ~BIT4;                             // Set P1.4 as pull-Down resistance
-	P1IE |= BIT4;                             	// P1.4 interrupt enabled
-	P1IES &= ~BIT4;                             // P1.4 Hi/Lo edge
-	P1IFG &= ~BIT4;                             // P1.4 IFG cleared
+        P3DIR &= ~(BIT4 + BIT5 + BIT6 + BIT7);
+  
+	P1DIR &= ~BIT4; 								// Set P1.2 as Input
+	P1REN |= BIT4;                            	// Ensable P1.2 internal resistance
+	P1OUT &= ~BIT4;                                 // Set P1.2 as pull-Down resistance
+	P1IE |= BIT4;                             	// P1.2 interrupt enabled
+	P1IES &= ~BIT4;                                 // P1.2 Low to High edge
+	P1IFG &= ~BIT4;                                 // P1.2 IFG cleared
+
 }
 
 // 2) Delay
@@ -713,19 +729,19 @@ void displayNearestPark(){
   halLcdClearScreen();
   halLcdPrintLineCol("Please go to",0,2,2);
   
-  if(~B1){
+  if(!B1){
     halLcdPrintLineCol("B1",5,6,2);
     return;
   }
-  if(~A1){
+  if(!A1){
     halLcdPrintLineCol("A1",5,6,2);
     return;
   }
-  if(~A2){
+  if(!A2){
     halLcdPrintLineCol("A2",5,6,2);
     return;
   }
-  if(~A3){
+  if(!A3){
     halLcdPrintLineCol("A3",5,6,2);
     return;
   }  
@@ -738,7 +754,7 @@ void checkPassword(){
 				
 	}
 	else{
-		halLcdPrintLineCol("Sorry, Wrong Password", 2, 0, 2);
+		halLcdPrintLineCol("Sorry.. Wrong Password", 2, 0, 2);
 		halLcdPrintLineCol("Please try again", 6, 0, 2);
 	}
 }
@@ -851,21 +867,27 @@ void __attribute__ ((interrupt(PORT1_VECTOR))) Port_1 (void)
 #endif
 {
   asm("nop;");
+   halLcdClearScreen();
+  halLcdPrintLineCol("Please go to",0,2,2);
   switch(DTMFindex){
 	   case 1:
-		CODE_1 = read port;
+		CODE_1 = P3IN & 0xF0;
+                halLcdPrintLineCol("First Digit",0,2,2);
 		DTMFindex++;
 		break;
 	  case 2:
-		CODE_2 = read port;
+		CODE_2 = P3IN & 0xF0;
+                halLcdPrintLineCol("Second Digit",0,2,2);
 		DTMFindex++;
 		break;
 	  case 3:
-		CODE_3 = read port;
+		CODE_3 = P3IN & 0xF0;
+                halLcdPrintLineCol("Third Digit",0,2,2);
 		DTMFindex++;
 		break;
 	  case 4:
-		CODE_4 = read port;
+		CODE_4 = P3IN & 0xF0;
+                halLcdPrintLineCol("Fourth Digit",0,2,2);
 		DTMFindex++;
 		checkPassword();
 		break;
@@ -874,6 +896,7 @@ void __attribute__ ((interrupt(PORT1_VECTOR))) Port_1 (void)
   }
 
   P1IFG &= ~BIT4;                          // P1.4 IFG cleared
+  return;
 }
 // Timer A0 interrupt service routine
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
