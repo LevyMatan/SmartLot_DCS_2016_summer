@@ -4,6 +4,13 @@
 #include "lcd.c"
 #define INT_MAX 4000000       // 2M
 #define RANGE_OPEN 12064      // 13[cm] * 16 * 58 = 12064
+
+// Set Gate Password Here..
+#define DIGIT_1 1
+#define DIGIT_2 2
+#define DIGIT_3 3
+#define DIGIT_4 4
+
 // Functions Declarations
 /////////////////////////
 // 1) Gate functions - control step motors
@@ -46,7 +53,7 @@ void delayCheck();
 
 // 8) DTMF Functions + get into parking proccedures
 void displayNearestPark();
-
+void checkPassword();
 // Variables
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ADC12 results ( Photoresist sensors )
@@ -63,7 +70,8 @@ int counter = 0; 					// count Range reads ( we make a decision only if we have 
 int ind;							// stuiped index
 int rangeStat = 0; 					// 0 - no close target, 1 - close target
 int gateStat = 0; 					// 0 - gate is close, 1 - gate is open
-
+int DTMFindex = 1;					// 1 - first char, 2 - Second char... 
+int CODE_1 = 0, CODE_2 = 0, CODE_3 = 0, CODE_4 = 0;
 // ==========
 // == MAIN ==
 // ==========
@@ -722,7 +730,18 @@ void displayNearestPark(){
     return;
   }  
 }
-
+void checkPassword(){
+	if((CODE_1 == DIGIT_1) & (CODE_2 == DIGIT_2) & (CODE_3 == DIGIT_3) & (CODE_4 == DIGIT_4) ){
+		displayNearestPark();
+		gateStat = 1 ;
+		openGate();
+				
+	}
+	else{
+		halLcdPrintLineCol("Sorry, Wrong Password", 2, 0, 2);
+		halLcdPrintLineCol("Please try again", 6, 0, 2);
+	}
+}
 // ========
 // Interups
 // ========
@@ -832,8 +851,29 @@ void __attribute__ ((interrupt(PORT1_VECTOR))) Port_1 (void)
 #endif
 {
   asm("nop;");
-  P1OUT ^= 0x01;                            // P1.0 = toggle
-  P1IFG &= ~0x010;                          // P1.4 IFG cleared
+  switch(DTMFindex){
+	   case 1:
+		CODE_1 = read port;
+		DTMFindex++;
+		break;
+	  case 2:
+		CODE_2 = read port;
+		DTMFindex++;
+		break;
+	  case 3:
+		CODE_3 = read port;
+		DTMFindex++;
+		break;
+	  case 4:
+		CODE_4 = read port;
+		DTMFindex++;
+		checkPassword();
+		break;
+	  default:
+		DTMFindex = 1;  
+  }
+
+  P1IFG &= ~BIT4;                          // P1.4 IFG cleared
 }
 // Timer A0 interrupt service routine
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
